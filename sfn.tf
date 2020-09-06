@@ -1,5 +1,5 @@
 resource "aws_sfn_state_machine" "sfn" {
-  name     = "db-vend-sfn"
+  name     = "db-vending-machine-sfn"
   role_arn = aws_iam_role.sfn.arn
 
   definition = <<EOF
@@ -17,13 +17,12 @@ resource "aws_sfn_state_machine" "sfn" {
 EOF
 
   tags = {
-    service = "db-vend"
+    service = "db-vending-machine"
   }
 }
 
 resource "aws_iam_role" "sfn" {
-  name = "sfn-role"
-  path = "/db-vend/"
+  name = "db-vending-machine-sfn"
 
   assume_role_policy = <<EOF
 {
@@ -45,12 +44,12 @@ resource "aws_iam_role" "sfn" {
 EOF
 
   tags = {
-    service = "db-vend"
+    service = "db-vending-machine"
   }
 }
 
 resource "aws_iam_role_policy" "sfn" {
-  name   = "db-vend-sfn-policy"
+  name   = "db-vending-machine-sfn"
   role   = aws_iam_role.sfn.id
 
   policy = <<EOF

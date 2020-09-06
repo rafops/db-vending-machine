@@ -7,11 +7,8 @@ bundle() {
     lambci/lambda:build-ruby2.7 bundle $@
 }
 
-(
-  cd lambda
-  mkdir -p vendor/bundle
-  bundle config set path 'vendor/bundle'
-  bundle install
-  rm -rf vendor/bundle/ruby/2.7.0/cache
-  zip -r ../lambda.zip .
-)
+cd lambda
+mkdir -p vendor/bundle
+bundle config set path 'vendor/bundle'
+bundle install
+rm -rf vendor/bundle/ruby/2.7.0/cache

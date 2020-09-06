@@ -7,3 +7,6 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_db_instance" "source" {
+  db_instance_identifier = var.source_db_instance_identifier
+}

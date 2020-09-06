@@ -1,21 +1,27 @@
 # DB Vending Machine
 
-A Terraform plugin that creates an RDS vending machine from production snapshots.
+A Terraform plugin that creates a DB Vending Machine from production snapshots of RDS instances.
 
-Build Terraform container:
+## Build Terraform
+
+Build Terraform container containing Terraform and its dependencies:
 
 ```
 ./build_terraform
 ```
 
-Build Lambda:
+## Build Lambda
+
+Download and vendorize Lambda dependencies:
 
 ```
 ./build_lambda
 ```
 
-Apply Terraform:
+## Deploy infrastructure
+
+Deploy service infrastructure for a specific source DB instance identifier:
 
 ```
-./terraform apply -var source_db_instance_identifier=db-instance
+./deploy db-instance
 ```

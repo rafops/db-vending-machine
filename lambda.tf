@@ -5,9 +5,9 @@ data "archive_file" "lambda" {
 }
 
 resource "aws_lambda_function" "create_snapshot" {
-  description      = "Lamba function to create DB snapshots"
+  description      = "Create DB snapshots for DB Vending Machine service"
   filename         = "lambda.zip"
-  function_name    = "create_snapshot"
+  function_name    = "db_vending_machine_create_snapshot"
   role             = aws_iam_role.lambda.arn
   handler          = "create_snapshot.handler"
   source_code_hash = filebase64sha256("lambda.zip")
@@ -16,7 +16,6 @@ resource "aws_lambda_function" "create_snapshot" {
 
   environment {
     variables = {
-      LAMBDA_ROLE_ARN = "${aws_iam_role.lambda.arn}"
       SOURCE_DB_INSTANCE_IDENTIFIER = "${var.source_db_instance_identifier}"
     }
   }
@@ -27,32 +26,30 @@ resource "aws_lambda_function" "create_snapshot" {
 }
 
 resource "aws_iam_role" "lambda" {
-  name = "lambda"
-  path = "/db-vend/"
+  name = "db-vending-machine-lambda"
 
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Effect": "Allow",
       "Action": "sts:AssumeRole",
       "Principal": {
         "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+      }
     }
   ]
 }
 EOF
 
   tags = {
-    service = "db-vend"
+    service = "db-vending-machine"
   }
 }
 
 resource "aws_iam_role_policy" "lambda" {
-  name   = "db-vend-lambda"
+  name   = "db-vending-machine-lambda"
   role   = aws_iam_role.lambda.id
 
   policy = <<EOF
@@ -60,12 +57,13 @@ resource "aws_iam_role_policy" "lambda" {
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Effect": "Allow",
       "Action": [
         "rds:CreateDBSnapshot",
+        "rds:AddTagsToResource",
         "rds:ModifyDBSnapshotAttribute",
         "rds:DeleteDBSnapshot"
       ],
-      "Effect": "Allow",
       "Resource": "*"
     }
   ]
@@ -79,8 +77,7 @@ resource "aws_cloudwatch_log_group" "lambda_log" {
 }
 
 resource "aws_iam_policy" "lambda_log" {
-  name        = "lambda-log"
-  path        = "/db-vend/"
+  name        = "db-vending-machine-lambda-log"
   description = "IAM policy for logging from a lambda"
 
   policy = <<EOF
@@ -88,13 +85,13 @@ resource "aws_iam_policy" "lambda_log" {
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "arn:aws:logs:*:*:*",
-      "Effect": "Allow"
+      "Resource": "arn:aws:logs:*:*:*"
     }
   ]
 }

@@ -3,33 +3,23 @@ require 'json'
 require 'aws-sdk-rds'
 
 
-$client = Aws::RDS::Client.new(
-  region: ENV['AWS_REGION'],
-  credentials: Aws::AssumeRoleCredentials.new(
-    client: Aws::STS::Client.new,
-    role_arn: ENV['LAMBDA_ROLE_ARN'],
-    role_session_name: "lambda-role-session"
-  )
-)
+$client = Aws::RDS::Client.new
 
-def lambda_handler(event:, context:)
+def handler(event:, context:)
   logger = Logger.new($stdout)
+  db_snapshot_identifier = "#{ENV['SOURCE_DB_INSTANCE_IDENTIFIER']}-#{Time.now.to_i}"
 
-  logger.info('## ENVIRONMENT VARIABLES')
-  vars = Hash.new
-  ENV.each do |variable|
-    vars[variable[0]] = variable[1]
-  end
-  logger.info(vars.to_json)
-
-  logger.info('## EVENT')
-  logger.info(event.to_json)
-  logger.info('## CONTEXT')
-  logger.info(context)
+  logger.info("creating snapshot #{db_snapshot_identifier} from source db instance #{ENV['SOURCE_DB_INSTANCE_IDENTIFIER']}")
 
   response = $client.create_db_snapshot({
-    db_instance_identifier: ENV['SOURCE_DB_INSTANCE_IDENTIFIER'], 
-    db_snapshot_identifier: "#{ENV['SOURCE_DB_INSTANCE_IDENTIFIER']}-snapshot", 
+    db_instance_identifier: ENV['SOURCE_DB_INSTANCE_IDENTIFIER'],
+    db_snapshot_identifier: db_snapshot_identifier,
+    tags: [
+      {
+        key: "service",
+        value: "db-vending-machine",
+      },
+    ]
   })
 
   response.to_h
