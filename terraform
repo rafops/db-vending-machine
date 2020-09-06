@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-docker run --rm \
+docker run -it --rm \
   -v "$(pwd):/root/workdir" \
   -v "${HOME}/.aws:/root/.aws" \
   -e AWS_ACCESS_KEY_ID \

@@ -1,0 +1,3 @@
+source 'https://rubygems.org' do
+  gem 'aws-sdk-rds', '~>1.97.0'
+end
