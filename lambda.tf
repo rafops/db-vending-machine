@@ -4,8 +4,9 @@ data "archive_file" "lambda" {
   output_path = "${path.module}/lambda.zip"
 }
 
+# Billed Duration: 300 ms	Memory Size: 128 MB
 resource "aws_lambda_function" "create_snapshot" {
-  description      = "Create a DB snapshot"
+  description      = "Create a DB snapshot from DB instance"
   filename         = "lambda.zip"
   function_name    = "db_vending_machine_create_snapshot"
   role             = aws_iam_role.lambda.arn
@@ -19,15 +20,15 @@ resource "aws_lambda_function" "create_snapshot" {
   ]
 }
 
-resource "aws_lambda_function" "describe_snapshot" {
-  description      = "Check DB snapshot status"
+resource "aws_lambda_function" "check_snapshot_status" {
+  description      = "Wait while DB snapshot is being created"
   filename         = "lambda.zip"
-  function_name    = "db_vending_machine_describe_snapshot"
+  function_name    = "db_vending_machine_check_snapshot_status"
   role             = aws_iam_role.lambda.arn
-  handler          = "describe_snapshot.handler"
+  handler          = "check_snapshot_status.handler"
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
-  timeout          = 900
+  timeout          = 60
 
   depends_on = [
     data.archive_file.lambda
@@ -68,6 +69,7 @@ resource "aws_iam_role_policy" "lambda" {
     {
       "Effect": "Allow",
       "Action": [
+        "rds:DescribeDBInstances",
         "rds:CreateDBSnapshot",
         "rds:AddTagsToResource",
         "rds:DescribeDBSnapshots",

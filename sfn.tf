@@ -10,22 +10,21 @@ resource "aws_sfn_state_machine" "sfn" {
     "CreateSnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.create_snapshot.arn}",
-      "Next": "DescribeSnapshot"
+      "Next": "CheckSnapshotStatus"
     },
-    "WaitWhileSnapshotCreating": {
+    "WaitWhileSnapshotIsCreating": {
       "Type": "Wait",
-      "Seconds": 30,
-      "Next": "DescribeSnapshot"
+      "Seconds": 60,
+      "Next": "CheckSnapshotStatus"
     },
-    "DescribeSnapshot": {
+    "CheckSnapshotStatus": {
       "Type": "Task",
-      "Resource": "${aws_lambda_function.describe_snapshot.arn}",
-      "TimeoutSeconds": 864,
+      "Resource": "${aws_lambda_function.check_snapshot_status.arn}",
       "Next": "IsSnapshotAvailable",
       "Retry": [ {
-        "ErrorEquals": [ "States.Timeout" ],
-        "IntervalSeconds": 30,
-        "MaxAttempts": 25
+        "ErrorEquals": [ "States.ALL" ],
+        "IntervalSeconds": 60,
+        "MaxAttempts": 5
       } ]
     },
     "IsSnapshotAvailable": {
@@ -36,7 +35,7 @@ resource "aws_sfn_state_machine" "sfn" {
             "Variable": "$.status",
             "StringEquals": "available"
           },
-          "Next": "WaitWhileSnapshotCreating"
+          "Next": "WaitWhileSnapshotIsCreating"
         }
       ],
       "Default": "Done"

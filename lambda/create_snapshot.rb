@@ -7,8 +7,9 @@ require 'aws-sdk-rds'
 $client = Aws::RDS::Client.new
 
 def handler(event:, context:)
-  raise "Invalid input, expecting a Hash" unless event.is_a? Hash
-  raise "Input key db_instance_identifier not specified" unless event.has_key? "db_instance_identifier"
+  unless event.has_key? "db_instance_identifier"
+    raise "Input key db_instance_identifier not specified"
+  end
 
   logger = Logger.new($stdout)
   db_instance_identifier = event["db_instance_identifier"]
