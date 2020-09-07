@@ -18,10 +18,20 @@ Download and vendorize Lambda dependencies:
 ./build_lambda
 ```
 
-## Deploy infrastructure
+## Deploy
 
-Deploy service infrastructure for a specific source DB instance identifier:
+Deploy service infrastructure:
 
 ```
-./deploy db-instance
+./deploy
+```
+
+## Execute
+
+To execute the state machine, create a new execution with the following input:
+
+```json
+{
+    "db_instance_identifier": "my-instance"
+}
 ```

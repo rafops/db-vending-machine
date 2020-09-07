@@ -5,7 +5,7 @@ data "archive_file" "lambda" {
 }
 
 resource "aws_lambda_function" "create_snapshot" {
-  description      = "Create DB snapshots for DB Vending Machine service"
+  description      = "Create a DB snapshot"
   filename         = "lambda.zip"
   function_name    = "db_vending_machine_create_snapshot"
   role             = aws_iam_role.lambda.arn
@@ -14,11 +14,20 @@ resource "aws_lambda_function" "create_snapshot" {
   runtime          = "ruby2.7"
   timeout          = 60
 
-  environment {
-    variables = {
-      SOURCE_DB_INSTANCE_IDENTIFIER = "${var.source_db_instance_identifier}"
-    }
-  }
+  depends_on = [
+    data.archive_file.lambda
+  ]
+}
+
+resource "aws_lambda_function" "describe_snapshot" {
+  description      = "Check DB snapshot status"
+  filename         = "lambda.zip"
+  function_name    = "db_vending_machine_describe_snapshot"
+  role             = aws_iam_role.lambda.arn
+  handler          = "describe_snapshot.handler"
+  source_code_hash = filebase64sha256("lambda.zip")
+  runtime          = "ruby2.7"
+  timeout          = 900
 
   depends_on = [
     data.archive_file.lambda
@@ -61,6 +70,7 @@ resource "aws_iam_role_policy" "lambda" {
       "Action": [
         "rds:CreateDBSnapshot",
         "rds:AddTagsToResource",
+        "rds:DescribeDBSnapshots",
         "rds:ModifyDBSnapshotAttribute",
         "rds:DeleteDBSnapshot"
       ],
@@ -73,7 +83,7 @@ EOF
 
 resource "aws_cloudwatch_log_group" "lambda_log" {
   name              = "/aws/lambda/${aws_lambda_function.create_snapshot.function_name}"
-  retention_in_days = var.log_retention
+  retention_in_days = 14
 }
 
 resource "aws_iam_policy" "lambda_log" {

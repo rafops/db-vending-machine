@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-./terraform apply -var source_db_instance_identifier="${1}" --auto-approve
+./terraform apply --auto-approve

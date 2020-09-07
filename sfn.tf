@@ -10,7 +10,40 @@ resource "aws_sfn_state_machine" "sfn" {
     "CreateSnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.create_snapshot.arn}",
-      "End": true
+      "Next": "DescribeSnapshot"
+    },
+    "WaitWhileSnapshotCreating": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "DescribeSnapshot"
+    },
+    "DescribeSnapshot": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.describe_snapshot.arn}",
+      "TimeoutSeconds": 60,
+      "Next": "IsSnapshotAvailable",
+      "Retry": [ {
+        "ErrorEquals": [ "States.Timeout" ],
+        "IntervalSeconds": 30,
+        "MaxAttempts": 2
+      } ]
+    },
+    "IsSnapshotAvailable": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.status",
+            "StringEquals": "available"
+          },
+          "Next": "WaitWhileSnapshotCreating"
+        }
+      ],
+      "Default": "Done"
+    },
+    "Done": {
+      "Type": "Pass",
+      "End": true  
     }
   }
 }
