@@ -20,12 +20,12 @@ resource "aws_sfn_state_machine" "sfn" {
     "DescribeSnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.describe_snapshot.arn}",
-      "TimeoutSeconds": 60,
+      "TimeoutSeconds": 864,
       "Next": "IsSnapshotAvailable",
       "Retry": [ {
         "ErrorEquals": [ "States.Timeout" ],
         "IntervalSeconds": 30,
-        "MaxAttempts": 2
+        "MaxAttempts": 25
       } ]
     },
     "IsSnapshotAvailable": {
