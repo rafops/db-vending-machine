@@ -19,7 +19,7 @@ def handler(event:, context:)
   # Can't end with a hyphen or contain two consecutive hyphens
   db_snapshot_identifier = "db-vending-machine-#{Time.now.to_i}-#{SecureRandom.uuid.split("-").first}"
   
-  logger.info("Creating snapshot #{db_snapshot_identifier} from db instance #{db_instance_identifier}")
+  logger.info("Creating snapshot #{db_snapshot_identifier} from instance #{db_instance_identifier}")
 
   response = $client.create_db_snapshot({
     db_instance_identifier: db_instance_identifier,
