@@ -34,6 +34,8 @@ Deploy test db infrastructure for development/test:
 ./deploy_test_db
 ```
 
+Make sure to open default security group to accept connections.
+
 ## Execute
 
 To execute the state machine, create a new execution with the following input:
