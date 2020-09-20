@@ -4,7 +4,6 @@ data "archive_file" "lambda" {
   output_path = "${path.module}/lambda.zip"
 }
 
-# Billed Duration: 300 ms	Memory Size: 128 MB
 resource "aws_lambda_function" "create_snapshot" {
   description      = "Create a DB snapshot from DB instance"
   filename         = "lambda.zip"

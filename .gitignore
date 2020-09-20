@@ -1,5 +1,6 @@
 .terraform
 *.tfstate
 *.tfstate.backup
+*.tfstate.lock.info
 lambda/vendor
 lambda.zip
