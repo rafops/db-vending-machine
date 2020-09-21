@@ -25,5 +25,11 @@ def handler(event:, context:)
     ], 
   })
 
-  response.to_h
+  result = response.to_h[:db_snapshot_attributes_result]
+  unless result.is_a? Hash and result.has_key? :db_snapshot_identifier
+    logger.debug("Response: #{response.inspect}")
+    raise "Invalid response when calling #modify_db_snapshot_attribute, key :db_snapshot_identifier not found"
+  end
+
+  result
 end
