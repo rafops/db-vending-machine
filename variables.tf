@@ -23,7 +23,7 @@ variable "service_namespace" {
   default     = "Default"
 }
 
-variable "create_test_db_instance" {
-  description = "Creates a DB instance for testing/development purposes."
-  default     = false
+variable "create_test_db" {
+  description = "Creates a DB instance for testing/development purposes. To enable this option, set create_test_db = true in test.tfvars."
+  default = false
 }

@@ -36,10 +36,11 @@ Deploy service infrastructure:
 
 ## Test DB
 
-Deploy test db infrastructure for development/test:
+To deploy a test db development/test purposes:
 
 ```
-./deploy_test_db
+echo "create_test_db = true" > terraform.tfvars
+./deploy
 ```
 
 If you want to connect to the database, make sure to open default security group inbound rules to accept connections.

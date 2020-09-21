@@ -38,7 +38,17 @@ resource "aws_sfn_state_machine" "sfn" {
           "Next": "WaitWhileSnapshotIsCreating"
         }
       ],
-      "Default": "Done"
+      "Default": "ShareSnapshot"
+    },
+    "ShareSnapshot": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.share_snapshot.arn}",
+      "Next": "Done",
+      "Retry": [ {
+        "ErrorEquals": [ "States.ALL" ],
+        "IntervalSeconds": 60,
+        "MaxAttempts": 5
+      } ]
     },
     "Done": {
       "Type": "Pass",

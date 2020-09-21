@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-./terraform init
-./terraform apply -var 'create_test_db_instance=true' --auto-approve

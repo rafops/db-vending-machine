@@ -46,6 +46,27 @@ resource "aws_cloudwatch_log_group" "check_snapshot_status_logs" {
   retention_in_days = 14
 }
 
+resource "aws_lambda_function" "share_snapshot" {
+  description      = "Share DB snapshot with vending account"
+  filename         = "lambda.zip"
+  function_name    = "DBVending_${var.service_namespace}_ShareSnapshot"
+  role             = aws_iam_role.lambda.arn
+  handler          = "share_snapshot.handler"
+  source_code_hash = filebase64sha256("lambda.zip")
+  runtime          = "ruby2.7"
+  timeout          = 60
+
+  depends_on = [
+    data.archive_file.lambda,
+    aws_iam_role_policy_attachment.lambda_logs
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "share_snapshot_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.share_snapshot.function_name}"
+  retention_in_days = 14
+}
+
 resource "aws_iam_role" "lambda" {
   name     = "DBVending-${var.service_namespace}-Lambda"
 
@@ -173,4 +194,18 @@ resource "aws_iam_role_policy" "restore" {
   ]
 }
 EOF
+}
+
+resource "aws_kms_grant" "grant" {
+  name              = "DBVending-${var.service_namespace}"
+  key_id            = data.aws_db_instance.source_db_instance.kms_key_id
+  grantee_principal = aws_iam_role.restore.arn
+  operations        = [
+    "Encrypt",
+    "Decrypt",
+    "GenerateDataKey",
+    "ReEncryptFrom",
+    "ReEncryptTo",
+    "DescribeKey"
+  ]
 }
