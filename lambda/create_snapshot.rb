@@ -12,12 +12,20 @@ def handler(event:, context:)
   end
 
   logger = Logger.new($stdout)
+
+  service_namespace = event.has_key?("service_namespace") ? event["service_namespace"] : "Default"
   db_instance_identifier = event["db_instance_identifier"]
+
   # Can't be null, empty, or blank
   # Must contain from 1 to 255 letters, numbers, or hyphens
   # First character must be a letter
   # Can't end with a hyphen or contain two consecutive hyphens
-  db_snapshot_identifier = "db-vending-machine-#{Time.now.to_i}-#{SecureRandom.uuid.split("-").first}"
+  db_snapshot_identifier = [
+    "DBVending",
+    service_namespace,
+    Time.now.to_i,
+    SecureRandom.uuid.split("-").first
+  ].join('-')
   
   logger.info("Creating snapshot #{db_snapshot_identifier} from instance #{db_instance_identifier}")
 
@@ -27,7 +35,7 @@ def handler(event:, context:)
     tags: [
       {
         key: "service",
-        value: "db-vending-machine",
+        value: "DBVending-#{service_namespace}", # TODO: set based on service_namespace
       },
     ]
   })

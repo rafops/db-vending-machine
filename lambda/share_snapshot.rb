@@ -12,7 +12,6 @@ def handler(event:, context:)
 
   logger = Logger.new($stdout)
   db_snapshot_identifier = event["db_snapshot_identifier"]
-  db_snapshot = nil
 
   logger.info("Sharing snapshot #{db_snapshot_identifier}")
 

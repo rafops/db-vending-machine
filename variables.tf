@@ -14,7 +14,7 @@ variable "restore_profile" {
 }
 
 variable "source_db_instance" {
-  description = "The source DB instance where snapshots will be taken from."
+  description = "The source DB instance identifier where snapshots will be taken from."
   default     = "db-vending-test"
 }
 

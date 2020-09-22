@@ -16,7 +16,3 @@ provider "aws" {
 }
 
 data "aws_caller_identity" "current" {}
-
-data "aws_db_instance" "source_db_instance" {
-  db_instance_identifier = var.source_db_instance
-}

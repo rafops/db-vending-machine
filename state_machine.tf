@@ -10,24 +10,23 @@ resource "aws_sfn_state_machine" "sfn" {
     "CreateSnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.create_snapshot.arn}",
-      "Next": "CheckSnapshotStatus"
+      "Parameters": {
+        "db_instance_identifier": "${var.source_db_instance}",
+        "service_namespace": "${var.service_namespace}"
+      },
+      "Next": "CheckSnapshotCreationStatus"
     },
-    "WaitWhileSnapshotIsCreating": {
-      "Type": "Wait",
-      "Seconds": 60,
-      "Next": "CheckSnapshotStatus"
-    },
-    "CheckSnapshotStatus": {
+    "CheckSnapshotCreationStatus": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.check_snapshot_status.arn}",
-      "Next": "IsSnapshotAvailable",
+      "Next": "IsSnapshotCreated",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
         "IntervalSeconds": 60,
         "MaxAttempts": 5
       } ]
     },
-    "IsSnapshotAvailable": {
+    "IsSnapshotCreated": {
       "Type": "Choice",
       "Choices": [
         {
@@ -38,7 +37,55 @@ resource "aws_sfn_state_machine" "sfn" {
           "Next": "WaitWhileSnapshotIsCreating"
         }
       ],
+      "Default": "RekeySnapshot"
+    },
+    "WaitWhileSnapshotIsCreating": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "CheckSnapshotCreationStatus"
+    },
+    "RekeySnapshot": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.rekey_snapshot.arn}",
+      "Parameters": {
+        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
+        "service_namespace": "${var.service_namespace}",
+        "kms_key_id": "${aws_kms_key.restore.arn}"
+      },
+      "Next": "CheckSnapshotRekeyStatus",
+      "Retry": [ {
+        "ErrorEquals": [ "States.ALL" ],
+        "IntervalSeconds": 60,
+        "MaxAttempts": 5
+      } ]
+    },
+    "CheckSnapshotRekeyStatus": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.check_snapshot_status.arn}",
+      "Next": "IsSnapshotRekeyed",
+      "Retry": [ {
+        "ErrorEquals": [ "States.ALL" ],
+        "IntervalSeconds": 60,
+        "MaxAttempts": 5
+      } ]
+    },
+    "IsSnapshotRekeyed": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.status",
+            "StringEquals": "available"
+          },
+          "Next": "WaitWhileSnapshotIsRekeying"
+        }
+      ],
       "Default": "ShareSnapshot"
+    },
+    "WaitWhileSnapshotIsRekeying": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "CheckSnapshotRekeyStatus"
     },
     "ShareSnapshot": {
       "Type": "Task",
