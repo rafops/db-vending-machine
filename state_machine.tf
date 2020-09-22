@@ -14,6 +14,7 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Parameters": {
         "db_instance_identifier": "${var.source_db_instance}",
         "service_namespace": "${var.service_namespace}"
+        "execution_id.$": "$$.Execution.Id"
       },
       "Next": "CheckSnapshotCreationStatus"
     },
