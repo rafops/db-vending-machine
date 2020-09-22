@@ -23,7 +23,7 @@ def handler(event:, context:)
 
   logger.info("Re-keying snapshot #{source_db_snapshot_identifier}")
 
-  response = $client.copy_db_snapshot({
+  response = client.copy_db_snapshot({
     source_db_snapshot_identifier: source_db_snapshot_identifier,
     target_db_snapshot_identifier: target_db_snapshot_identifier,
     kms_key_id: kms_key_id,

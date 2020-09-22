@@ -32,9 +32,9 @@ def handler(event:, context:)
     role_arn: event["restore_role_arn"],
     role_session_name: "CopySnapshot_#{unique_id}", 
   })
-  client = Aws::RDS::Client.new(
+  client = Aws::RDS::Client.new({
     credentials: response[:credentials]
-  )
+  })
 
   db_snapshot = nil
 

@@ -21,7 +21,7 @@ def handler(event:, context:)
 
   logger.info("Sharing snapshot #{db_snapshot_identifier}")
 
-  response = $client.modify_db_snapshot_attribute({
+  response = client.modify_db_snapshot_attribute({
     attribute_name: "restore", 
     db_snapshot_identifier: db_snapshot_identifier,
     values_to_add: [

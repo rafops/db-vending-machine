@@ -54,3 +54,11 @@ To execute the state machine, create a new execution with the following input:
     "db_instance_identifier": "db-vending-test"
 }
 ```
+
+## Teardown
+
+To cleanup, run:
+
+```
+./teardown
+```
