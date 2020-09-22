@@ -4,3 +4,4 @@
 *.tfstate.lock.info
 lambda/vendor
 lambda.zip
+terraform.tfvars
