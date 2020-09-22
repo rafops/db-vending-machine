@@ -37,7 +37,24 @@ resource "aws_iam_policy" "restore" {
       "Action": [
         "rds:CreateDBInstance",
         "rds:CopyDBSnapshot",
-        "rds:DeleteDBInstance"
+        "rds:DeleteDBInstance",
+        "rds:AddTagsToResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:ListKeys",
+        "kms:ListAliases",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:CreateGrant",
+        "kms:ListGrants",
+        "kms:RevokeGrant"
       ],
       "Resource": "*"
     }

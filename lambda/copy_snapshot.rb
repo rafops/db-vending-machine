@@ -8,7 +8,8 @@ def handler(event:, context:)
     "db_snapshot_identifier",
     "db_snapshot_account_id",
     "db_snapshot_region",
-    "restore_role_arn"
+    "restore_role_arn",
+    "kms_key_id"
   ].each do |k|
     unless event.has_key? k
       raise "Event key #{k} not specified"
@@ -26,16 +27,13 @@ def handler(event:, context:)
     event["db_snapshot_identifier"]
   ].join(":")
   target_db_snapshot_identifier = event["db_snapshot_identifier"].sub(/rekeyed$/, "copied")
-  unique_id = event["execution_id"].to_s.split(":").last.to_s.split("-").first
+  kms_key_id = event["kms_key_id"]
   service_namespace = event.has_key?("service_namespace") ? event["service_namespace"] : "Default"
   
   role_credentials = Aws::AssumeRoleCredentials.new(
     client: Aws::STS::Client.new,
     role_arn: event["restore_role_arn"],
-    role_session_name: [
-      "CopySnapshot",
-      unique_id
-    ].compact.join("-")
+    role_session_name: "CopySnapshotSession"
   )
   client = Aws::RDS::Client.new({
     credentials: role_credentials
@@ -48,6 +46,7 @@ def handler(event:, context:)
   response = client.copy_db_snapshot({
     source_db_snapshot_identifier: source_db_snapshot_identifier,
     target_db_snapshot_identifier: target_db_snapshot_identifier,
+    kms_key_id: kms_key_id,
     tags: [
       {
         key: "service",

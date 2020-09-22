@@ -30,7 +30,7 @@ resource "aws_cloudwatch_log_group" "create_snapshot_logs" {
 ## Check snapshot
 
 resource "aws_lambda_function" "check_snapshot_status" {
-  description      = "Wait while DB snapshot is being created"
+  description      = "Check status for DB snapshot"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_CheckSnapshotStatus"
   role             = aws_iam_role.lambda.arn
@@ -116,6 +116,29 @@ resource "aws_lambda_function" "copy_snapshot" {
 
 resource "aws_cloudwatch_log_group" "copy_snapshot_logs" {
   name              = "/aws/lambda/${aws_lambda_function.copy_snapshot.function_name}"
+  retention_in_days = 14
+}
+
+## Check snapshot copy
+
+resource "aws_lambda_function" "check_snapshot_copy_status" {
+  description      = "Check copy status for DB snapshot"
+  filename         = "lambda.zip"
+  function_name    = "DBVending_${var.service_namespace}_CheckSnapshotCopyStatus"
+  role             = aws_iam_role.lambda.arn
+  handler          = "check_snapshot_copy_status.handler"
+  source_code_hash = filebase64sha256("lambda.zip")
+  runtime          = "ruby2.7"
+  timeout          = 60
+
+  depends_on = [
+    data.archive_file.lambda,
+    aws_iam_role_policy_attachment.logs
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "check_snapshot_copy_status_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.check_snapshot_copy_status.function_name}"
   retention_in_days = 14
 }
 
