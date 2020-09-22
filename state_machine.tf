@@ -13,7 +13,7 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Resource": "${aws_lambda_function.create_snapshot.arn}",
       "Parameters": {
         "db_instance_identifier": "${var.source_db_instance}",
-        "service_namespace": "${var.service_namespace}"
+        "service_namespace": "${var.service_namespace}",
         "execution_id.$": "$$.Execution.Id"
       },
       "Next": "CheckSnapshotCreationStatus"

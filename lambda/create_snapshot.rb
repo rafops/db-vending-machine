@@ -14,7 +14,9 @@ def handler(event:, context:)
 
   service_namespace = event.has_key?("service_namespace") ? event["service_namespace"] : "Default"
   db_instance_identifier = event["db_instance_identifier"]
-  execution_id = event["execution_id"].to_s.split("-").first
+  # Generate a unique ID based on the first token of execution id UUID
+  # Format: arn:aws:states:region:account_id:execution:state_machine_name:UUID
+  unique_id = event["execution_id"].to_s.split(":").last.to_s.split("-").first
 
   # Can't be null, empty, or blank
   # Must contain from 1 to 255 letters, numbers, or hyphens
@@ -25,7 +27,7 @@ def handler(event:, context:)
     "DBVending",
     service_namespace,
     Time.now.to_i,
-    execution_id
+    unique_id
   ].compact.join("-").downcase
   
   logger.info("Creating snapshot #{db_snapshot_identifier} from instance #{db_instance_identifier}")
