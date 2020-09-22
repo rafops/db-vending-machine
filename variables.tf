@@ -19,7 +19,7 @@ variable "source_db_instance" {
 }
 
 variable "service_namespace" {
-  description = "A unique namespace for a DB Vending Machine service. This allows setting up multiple DB Vending Machines per account."
+  description = "A unique namespace for a DB Vending Machine service. This allows setting up multiple DB Vending Machines per account. Must contain only camel cased words and numbers."
   default     = "Default"
 }
 

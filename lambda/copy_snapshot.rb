@@ -10,23 +10,31 @@ def handler(event:, context:)
     raise "Event key db_snapshot_identifier not specified"
   end
 
-  unless event.has_key? "kms_key_id"
-    raise "Event key kms_key_id not specified"
+  unless event.has_key? "db_snapshot_account_id"
+    raise "Event key db_snapshot_account_id not specified"
+  end
+
+  unless event.has_key? "db_snapshot_region"
+    raise "Event key db_snapshot_region not specified"
   end
 
   logger = Logger.new($stdout)
 
-  source_db_snapshot_identifier = event["db_snapshot_identifier"]
-  kms_key_id = event["kms_key_id"]
-  target_db_snapshot_identifier = "#{source_db_snapshot_identifier}-rekeyed"
+  source_db_snapshot_identifier = [
+    "arn:aws:rds",
+    event["db_snapshot_region"],
+    event["db_snapshot_account_id"],
+    "snapshot",
+    event["db_snapshot_identifier"]
+  ].join(":")
+  target_db_snapshot_identifier = event["db_snapshot_identifier"].sub(/rekeyed$/, "copied")
   db_snapshot = nil
 
-  logger.info("Re-keying snapshot #{source_db_snapshot_identifier}")
+  logger.info("Copying snapshot #{source_db_snapshot_identifier}")
 
   response = $client.copy_db_snapshot({
     source_db_snapshot_identifier: source_db_snapshot_identifier,
     target_db_snapshot_identifier: target_db_snapshot_identifier,
-    kms_key_id: kms_key_id,
     copy_tags: true
   })
 

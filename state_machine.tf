@@ -7,6 +7,7 @@ resource "aws_sfn_state_machine" "state_machine" {
   "Comment": "DB Vending Machine state machine",
   "StartAt": "CreateSnapshot",
   "States": {
+
     "CreateSnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.create_snapshot.arn}",
@@ -23,7 +24,7 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
         "IntervalSeconds": 60,
-        "MaxAttempts": 5
+        "MaxAttempts": 3
       } ]
     },
     "IsSnapshotCreated": {
@@ -44,19 +45,20 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Seconds": 60,
       "Next": "CheckSnapshotCreationStatus"
     },
+
+
     "RekeySnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.rekey_snapshot.arn}",
       "Parameters": {
         "db_snapshot_identifier.$": "$.db_snapshot_identifier",
-        "service_namespace": "${var.service_namespace}",
         "kms_key_id": "${aws_kms_key.restore.arn}"
       },
       "Next": "CheckSnapshotRekeyStatus",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
         "IntervalSeconds": 60,
-        "MaxAttempts": 5
+        "MaxAttempts": 3
       } ]
     },
     "CheckSnapshotRekeyStatus": {
@@ -66,7 +68,7 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
         "IntervalSeconds": 60,
-        "MaxAttempts": 5
+        "MaxAttempts": 3
       } ]
     },
     "IsSnapshotRekeyed": {
@@ -87,6 +89,8 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Seconds": 60,
       "Next": "CheckSnapshotRekeyStatus"
     },
+
+
     "ShareSnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.share_snapshot.arn}",
@@ -94,13 +98,60 @@ resource "aws_sfn_state_machine" "state_machine" {
         "db_snapshot_identifier.$": "$.db_snapshot_identifier",
         "restore_account_id": "${local.restore_account_id}"
       },
-      "Next": "Done",
+      "Next": "CopySnapshot",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
         "IntervalSeconds": 60,
-        "MaxAttempts": 5
+        "MaxAttempts": 3
       } ]
     },
+
+
+    "CopySnapshot": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.copy_snapshot.arn}",
+      "Parameters": {
+        "db_snapshot_account_id": "${local.backup_account_id}",
+        "db_snapshot_region": "${var.aws_region}",
+        "db_snapshot_identifier.$": "$.db_snapshot_identifier"
+      },
+      "Next": "CheckSnapshotCopyStatus",
+      "Retry": [ {
+        "ErrorEquals": [ "States.ALL" ],
+        "IntervalSeconds": 60,
+        "MaxAttempts": 3
+      } ]
+    },
+    "CheckSnapshotCopyStatus": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.check_snapshot_status.arn}",
+      "Next": "IsSnapshotCopied",
+      "Retry": [ {
+        "ErrorEquals": [ "States.ALL" ],
+        "IntervalSeconds": 60,
+        "MaxAttempts": 3
+      } ]
+    },
+    "IsSnapshotCopied": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.status",
+            "StringEquals": "available"
+          },
+          "Next": "WaitWhileSnapshotIsCopying"
+        }
+      ],
+      "Default": "Done"
+    },
+    "WaitWhileSnapshotIsCopying": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "CheckSnapshotCopyStatus"
+    },
+
+
     "Done": {
       "Type": "Pass",
       "End": true  

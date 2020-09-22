@@ -7,7 +7,7 @@ $client = Aws::RDS::Client.new
 
 def handler(event:, context:)
   unless event.has_key? "db_snapshot_identifier"
-    raise "Input key db_snapshot_identifier not specified"
+    raise "Event key db_snapshot_identifier not specified"
   end
 
   logger = Logger.new($stdout)

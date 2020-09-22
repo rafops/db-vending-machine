@@ -96,6 +96,29 @@ resource "aws_cloudwatch_log_group" "share_snapshot_logs" {
   retention_in_days = 14
 }
 
+## Copy snapshot
+
+resource "aws_lambda_function" "copy_snapshot" {
+  description      = "Copy DB snapshot between accounts"
+  filename         = "lambda.zip"
+  function_name    = "DBVending_${var.service_namespace}_CopySnapshot"
+  role             = aws_iam_role.lambda.arn
+  handler          = "copy_snapshot.handler"
+  source_code_hash = filebase64sha256("lambda.zip")
+  runtime          = "ruby2.7"
+  timeout          = 60
+
+  depends_on = [
+    data.archive_file.lambda,
+    aws_iam_role_policy_attachment.logs
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "copy_snapshot_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.copy_snapshot.function_name}"
+  retention_in_days = 14
+}
+
 ## Lambda execution role and policy
 
 resource "aws_iam_role" "lambda" {

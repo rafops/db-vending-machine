@@ -8,7 +8,7 @@ $client = Aws::RDS::Client.new
 
 def handler(event:, context:)
   unless event.has_key? "db_instance_identifier"
-    raise "Input key db_instance_identifier not specified"
+    raise "Event key db_instance_identifier not specified"
   end
 
   logger = Logger.new($stdout)
@@ -26,7 +26,7 @@ def handler(event:, context:)
     service_namespace,
     Time.now.to_i,
     SecureRandom.uuid.split("-").first
-  ].join('-').downcase
+  ].join("-").downcase
   
   logger.info("Creating snapshot #{db_snapshot_identifier} from instance #{db_instance_identifier}")
 
