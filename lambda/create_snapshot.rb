@@ -3,14 +3,13 @@ require 'json'
 require 'aws-sdk-rds'
 
 
-$client = Aws::RDS::Client.new
-
 def handler(event:, context:)
   unless event.has_key? "db_instance_identifier"
     raise "Event key db_instance_identifier not specified"
   end
 
   logger = Logger.new($stdout)
+  client = Aws::RDS::Client.new
 
   service_namespace = event.has_key?("service_namespace") ? event["service_namespace"] : "Default"
   db_instance_identifier = event["db_instance_identifier"]
@@ -32,7 +31,7 @@ def handler(event:, context:)
   
   logger.info("Creating snapshot #{db_snapshot_identifier} from instance #{db_instance_identifier}")
 
-  response = $client.create_db_snapshot({
+  response = client.create_db_snapshot({
     db_instance_identifier: db_instance_identifier,
     db_snapshot_identifier: db_snapshot_identifier,
     tags: [

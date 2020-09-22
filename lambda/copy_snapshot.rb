@@ -3,22 +3,20 @@ require 'json'
 require 'aws-sdk-rds'
 
 
-$client = Aws::RDS::Client.new
-
 def handler(event:, context:)
-  unless event.has_key? "db_snapshot_identifier"
-    raise "Event key db_snapshot_identifier not specified"
-  end
-
-  unless event.has_key? "db_snapshot_account_id"
-    raise "Event key db_snapshot_account_id not specified"
-  end
-
-  unless event.has_key? "db_snapshot_region"
-    raise "Event key db_snapshot_region not specified"
+  [
+    "db_snapshot_identifier",
+    "db_snapshot_account_id",
+    "db_snapshot_region",
+    "restore_role_arn"
+  ].each do |k|
+    unless event.has_key? k
+      raise "Event key #{k} not specified"
+    end  
   end
 
   logger = Logger.new($stdout)
+  client = Aws::STS::Client.new
 
   source_db_snapshot_identifier = [
     "arn:aws:rds",
@@ -28,11 +26,21 @@ def handler(event:, context:)
     event["db_snapshot_identifier"]
   ].join(":")
   target_db_snapshot_identifier = event["db_snapshot_identifier"].sub(/rekeyed$/, "copied")
+  unique_id = event["execution_id"].to_s.split(":").last.to_s.split("-").first
+  
+  response = client.assume_role({
+    role_arn: event["restore_role_arn"],
+    role_session_name: "CopySnapshot_#{unique_id}", 
+  })
+  client = Aws::RDS::Client.new(
+    credentials: response[:credentials]
+  )
+
   db_snapshot = nil
 
   logger.info("Copying snapshot #{source_db_snapshot_identifier}")
 
-  response = $client.copy_db_snapshot({
+  response = client.copy_db_snapshot({
     source_db_snapshot_identifier: source_db_snapshot_identifier,
     target_db_snapshot_identifier: target_db_snapshot_identifier,
     copy_tags: true

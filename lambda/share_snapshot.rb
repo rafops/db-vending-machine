@@ -3,21 +3,22 @@ require 'json'
 require 'aws-sdk-rds'
 
 
-$client = Aws::RDS::Client.new
-
 def handler(event:, context:)
-  unless event.has_key? "db_snapshot_identifier"
-    raise "Event key db_snapshot_identifier not specified"
+  [
+    "db_snapshot_identifier",
+    "restore_account_id"
+  ].each do |k|
+    unless event.has_key? k
+      raise "Event key #{k} not specified"
+    end  
   end
 
-  unless event.has_key? "restore_account_id"
-    raise "Event key restore_account_id not specified"
-  end
+  logger = Logger.new($stdout)
+  client = Aws::RDS::Client.new
 
   db_snapshot_identifier = event["db_snapshot_identifier"]
   restore_account_id = event["restore_account_id"]
 
-  logger = Logger.new($stdout)
   logger.info("Sharing snapshot #{db_snapshot_identifier}")
 
   response = $client.modify_db_snapshot_attribute({

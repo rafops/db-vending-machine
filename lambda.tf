@@ -144,6 +144,59 @@ EOF
   }
 }
 
+# TODO: Restrict resources
+resource "aws_iam_policy" "lambda" {
+  name     = "DBVending-${var.service_namespace}-Lambda"
+  description = "IAM policy for Lambdas"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "rds:DescribeDBInstances",
+        "rds:CreateDBSnapshot",
+        "rds:CopyDBSnapshot",
+        "rds:AddTagsToResource",
+        "rds:DescribeDBSnapshots",
+        "rds:ModifyDBSnapshotAttribute",
+        "rds:DeleteDBSnapshot"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:ListKeys",
+        "kms:ListAliases",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:CreateGrant",
+        "kms:ListGrants",
+        "kms:RevokeGrant"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": "${aws_iam_role.restore.arn}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "backup" {
+  role       = aws_iam_role.lambda.id
+  policy_arn = aws_iam_policy.lambda.arn
+}
+
 resource "aws_iam_policy" "logs" {
   name        = "DBVending-${var.service_namespace}-Logs"
   description = "IAM policy for logging Lambda execution"

@@ -114,7 +114,9 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Parameters": {
         "db_snapshot_account_id": "${local.backup_account_id}",
         "db_snapshot_region": "${var.aws_region}",
-        "db_snapshot_identifier.$": "$.db_snapshot_identifier"
+        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
+        "restore_role_arn": "${aws_iam_role.restore.arn}",
+        "execution_id.$": "$$.Execution.Id"
       },
       "Next": "CheckSnapshotCopyStatus",
       "Retry": [ {

@@ -3,18 +3,18 @@ require 'json'
 require 'aws-sdk-rds'
 
 
-$client = Aws::RDS::Client.new
-
 def handler(event:, context:)
-  unless event.has_key? "db_snapshot_identifier"
-    raise "Event key db_snapshot_identifier not specified"
-  end
-
-  unless event.has_key? "kms_key_id"
-    raise "Event key kms_key_id not specified"
+  [
+    "db_snapshot_identifier",
+    "kms_key_id"
+  ].each do |k|
+    unless event.has_key? k
+      raise "Event key #{k} not specified"
+    end  
   end
 
   logger = Logger.new($stdout)
+  client = Aws::RDS::Client.new
 
   source_db_snapshot_identifier = event["db_snapshot_identifier"]
   kms_key_id = event["kms_key_id"]
