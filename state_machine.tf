@@ -1,6 +1,6 @@
-resource "aws_sfn_state_machine" "sfn" {
+resource "aws_sfn_state_machine" "state_machine" {
   name     = "DBVending-${var.service_namespace}-StateMachine"
-  role_arn = aws_iam_role.sfn.arn
+  role_arn = aws_iam_role.state_machine.arn
 
   definition = <<EOF
 {
@@ -90,6 +90,10 @@ resource "aws_sfn_state_machine" "sfn" {
     "ShareSnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.share_snapshot.arn}",
+      "Parameters": {
+        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
+        "restore_account_id": "${local.restore_account_id}"
+      },
       "Next": "Done",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
@@ -110,7 +114,7 @@ EOF
   }
 }
 
-resource "aws_iam_role" "sfn" {
+resource "aws_iam_role" "state_machine" {
   name = "DBVending-${var.service_namespace}-StateMachine"
 
   assume_role_policy = <<EOF
@@ -137,9 +141,9 @@ EOF
   }
 }
 
-resource "aws_iam_role_policy" "sfn" {
+resource "aws_iam_role_policy" "state_machine" {
   name = "DBVending-${var.service_namespace}-StateMachine"
-  role = aws_iam_role.sfn.id
+  role = aws_iam_role.state_machine.id
 
   policy = <<EOF
 {

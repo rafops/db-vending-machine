@@ -20,12 +20,13 @@ def handler(event:, context:)
   # Must contain from 1 to 255 letters, numbers, or hyphens
   # First character must be a letter
   # Can't end with a hyphen or contain two consecutive hyphens
+  # This value is stored as a lowercase string
   db_snapshot_identifier = [
     "DBVending",
     service_namespace,
     Time.now.to_i,
     SecureRandom.uuid.split("-").first
-  ].join('-')
+  ].join('-').downcase
   
   logger.info("Creating snapshot #{db_snapshot_identifier} from instance #{db_instance_identifier}")
 
