@@ -116,6 +116,7 @@ resource "aws_sfn_state_machine" "state_machine" {
         "db_snapshot_region": "${var.aws_region}",
         "db_snapshot_identifier.$": "$.db_snapshot_identifier",
         "restore_role_arn": "${aws_iam_role.restore.arn}",
+        "service_namespace": "${var.service_namespace}",
         "execution_id.$": "$$.Execution.Id"
       },
       "Next": "CheckSnapshotCopyStatus",

@@ -27,13 +27,18 @@ def handler(event:, context:)
   ].join(":")
   target_db_snapshot_identifier = event["db_snapshot_identifier"].sub(/rekeyed$/, "copied")
   unique_id = event["execution_id"].to_s.split(":").last.to_s.split("-").first
+  service_namespace = event.has_key?("service_namespace") ? event["service_namespace"] : "Default"
   
-  response = client.assume_role({
+  role_credentials = Aws::AssumeRoleCredentials.new(
+    client: Aws::STS::Client.new,
     role_arn: event["restore_role_arn"],
-    role_session_name: "CopySnapshot_#{unique_id}", 
-  })
+    role_session_name: [
+      "CopySnapshot",
+      unique_id
+    ].compact.join("-")
+  )
   client = Aws::RDS::Client.new({
-    credentials: response[:credentials]
+    credentials: role_credentials
   })
 
   db_snapshot = nil
@@ -43,7 +48,12 @@ def handler(event:, context:)
   response = client.copy_db_snapshot({
     source_db_snapshot_identifier: source_db_snapshot_identifier,
     target_db_snapshot_identifier: target_db_snapshot_identifier,
-    copy_tags: true
+    tags: [
+      {
+        key: "service",
+        value: "DBVending-#{service_namespace}"
+      }
+    ]
   })
 
   db_snapshot = response.to_h[:db_snapshot]

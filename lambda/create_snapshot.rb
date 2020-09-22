@@ -37,8 +37,8 @@ def handler(event:, context:)
     tags: [
       {
         key: "service",
-        value: "DBVending-#{service_namespace}", # TODO: set based on service_namespace
-      },
+        value: "DBVending-#{service_namespace}"
+      }
     ]
   })
 
