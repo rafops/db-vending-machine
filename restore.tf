@@ -35,8 +35,11 @@ resource "aws_iam_policy" "restore" {
     {
       "Effect": "Allow",
       "Action": [
+        "rds:DescribeDBInstances",
+        "rds:DescribeDBSnapshots",
         "rds:CreateDBInstance",
         "rds:CopyDBSnapshot",
+        "rds:DeleteDBSnapshot",
         "rds:DeleteDBInstance",
         "rds:AddTagsToResource"
       ],
