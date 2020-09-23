@@ -12,7 +12,7 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Type": "Task",
       "Resource": "${aws_lambda_function.create_snapshot.arn}",
       "Parameters": {
-        "db_instance_identifier": "${var.source_db_instance}",
+        "db_instance_identifier": "${var.backup_db_instance}",
         "service_namespace": "${var.service_namespace}",
         "execution_id.$": "$$.Execution.Id"
       },
@@ -151,12 +151,63 @@ resource "aws_sfn_state_machine" "state_machine" {
           "Next": "WaitWhileSnapshotIsCopying"
         }
       ],
-      "Default": "Done"
+      "Default": "CreateInstance"
     },
     "WaitWhileSnapshotIsCopying": {
       "Type": "Wait",
       "Seconds": 60,
       "Next": "CheckSnapshotCopyStatus"
+    },
+
+
+    "CreateInstance": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.create_instance.arn}",
+      "Parameters": {
+        "db_instance_identifier": "${var.backup_db_instance}",
+        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
+        "restore_role_arn": "${aws_iam_role.restore.arn}",
+        "security_group_id": "${aws_security_group.restore.id}",
+        "service_namespace": "${var.service_namespace}"
+      },
+      "Next": "CheckInstanceStatus",
+      "Retry": [ {
+        "ErrorEquals": [ "States.ALL" ],
+        "IntervalSeconds": 60,
+        "MaxAttempts": 3
+      } ]
+    },
+    "CheckInstanceStatus": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.check_instance_status.arn}",
+      "Parameters": {
+        "db_instance_identifier.$": "$.db_instance_identifier",
+        "restore_role_arn": "${aws_iam_role.restore.arn}"
+      },
+      "Next": "IsInstanceRestored",
+      "Retry": [ {
+        "ErrorEquals": [ "States.ALL" ],
+        "IntervalSeconds": 60,
+        "MaxAttempts": 3
+      } ]
+    },
+    "IsInstanceRestored": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.status",
+            "StringEquals": "available"
+          },
+          "Next": "WaitWhileInstanceIsRestoring"
+        }
+      ],
+      "Default": "Done"
+    },
+    "WaitWhileInstanceIsRestoring": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "CheckInstanceStatus"
     },
 
 

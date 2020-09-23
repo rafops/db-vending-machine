@@ -6,9 +6,11 @@ A Terraform plugin that creates a DB Vending Machine that creates copies of prod
 
 Set the following Terraform variables to configure DB Vending Machine module:
 
-- Set `backup_profile` to AWS credentials profile where DB Vending Machine will take backups from. Usually a production account.
-- Set `restore_profile` to AWS credentials profile where DB Vending Machine will create DB instances from snapshots. Usually a development account.
-- Set `source_db_instance` to DB instance identifier in the `backup_profile` account where snapshots will be taken from.
+- Set `backup_profile` to AWS credentials profile where snapshots will be taken from. Usually a production account.
+- Set `backup_db_instance` to DB instance identifier in the `backup_profile` account where snapshots will be taken from. Usually a production instance.
+- Set `restore_profile` to AWS credentials profile where DB instances will be restored into. Usually a development account.
+- Set `restore_vpc_id` to the VPC in the `restore_profile` account where DB instances will be restored into.
+- Set `restore_subnet_ids` to a list containing a minimum of two subnets from the `restore_vpc_id`.
 
 ## Build Terraform
 
@@ -34,7 +36,7 @@ Deploy service infrastructure:
 ./deploy
 ```
 
-## Test DB
+## Deploy test DB
 
 To deploy a test db development/test purposes:
 
@@ -61,4 +63,12 @@ To cleanup, run:
 
 ```
 ./teardown
+```
+
+## Test Lambdas
+
+To test Lambda functions locally, run Lambci script passing the function name and the payload as follows:
+
+```
+./test_lambda create_snapshot '{"db_instance_identifier":"db-vending-test"}'
 ```

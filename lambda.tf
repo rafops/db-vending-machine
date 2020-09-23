@@ -142,6 +142,52 @@ resource "aws_cloudwatch_log_group" "check_snapshot_copy_status_logs" {
   retention_in_days = 14
 }
 
+## Create instance
+
+resource "aws_lambda_function" "create_instance" {
+  description      = "Create DB instance from snapshot"
+  filename         = "lambda.zip"
+  function_name    = "DBVending_${var.service_namespace}_CreateInstance"
+  role             = aws_iam_role.lambda.arn
+  handler          = "create_instance.handler"
+  source_code_hash = filebase64sha256("lambda.zip")
+  runtime          = "ruby2.7"
+  timeout          = 60
+
+  depends_on = [
+    data.archive_file.lambda,
+    aws_iam_role_policy_attachment.logs
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "create_instance_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.create_instance.function_name}"
+  retention_in_days = 14
+}
+
+## Check instance status
+
+resource "aws_lambda_function" "check_instance_status" {
+  description      = "Check DB instance status"
+  filename         = "lambda.zip"
+  function_name    = "DBVending_${var.service_namespace}_CheckInstanceStatus"
+  role             = aws_iam_role.lambda.arn
+  handler          = "check_instance_status.handler"
+  source_code_hash = filebase64sha256("lambda.zip")
+  runtime          = "ruby2.7"
+  timeout          = 60
+
+  depends_on = [
+    data.archive_file.lambda,
+    aws_iam_role_policy_attachment.logs
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "check_instance_status_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.check_instance_status.function_name}"
+  retention_in_days = 14
+}
+
 ## Lambda execution role and policy
 
 resource "aws_iam_role" "lambda" {

@@ -37,7 +37,7 @@ resource "aws_iam_policy" "restore" {
       "Action": [
         "rds:DescribeDBInstances",
         "rds:DescribeDBSnapshots",
-        "rds:CreateDBInstance",
+        "rds:RestoreDBInstanceFromDBSnapshot",
         "rds:CopyDBSnapshot",
         "rds:DeleteDBSnapshot",
         "rds:DeleteDBInstance",
@@ -125,6 +125,45 @@ resource "aws_kms_key" "restore" {
   ]
 }
 EOF
+
+  tags = {
+    service = "DBVending-${var.service_namespace}"
+  }
+}
+
+resource "aws_db_subnet_group" "restore" {
+  provider   = aws.restore
+  # only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in "name"
+  name       = lower("DBVending-${var.service_namespace}-Restore")
+  subnet_ids = var.restore_subnet_ids
+
+  tags = {
+    service = "DBVending-${var.service_namespace}"
+  }
+}
+
+resource "aws_security_group" "restore" {
+  provider    = aws.restore
+  name        = "DBVending-${var.service_namespace}-Restore"
+  description = "Allow inbound traffic to restored DB instances"
+  vpc_id      = var.restore_vpc_id
+
+  ingress {
+    description = "Allow connections to PostgreSQL"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
 
   tags = {
     service = "DBVending-${var.service_namespace}"
