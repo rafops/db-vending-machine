@@ -53,7 +53,7 @@ while true; do
   stop_date=$(get_stop_date)
 
   if [[ -n "${state_entered}" ]] && [[ "${state_entered}" != "null" ]] ; then
-    printf "\n%s\n" "${state_entered}"
+    echo "${state_entered}"
   fi
   if [[ -n "${stop_date}" ]] && [[ "${stop_date}" != "null" ]] ; then
     get_execution_failed_cause
