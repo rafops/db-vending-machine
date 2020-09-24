@@ -56,9 +56,11 @@ while true; do
     echo "${state_entered}"
   fi
   if [[ -n "${stop_date}" ]] && [[ "${stop_date}" != "null" ]] ; then
-    get_execution_failed_cause
     break
   fi
 
   sleep 60
 done
+
+get_execution_failed_cause
+echo "Done!"
