@@ -1,15 +1,15 @@
-output "address" {
-  value = join("", aws_db_instance.test.*.address)
+output "aws_region" {
+  value = var.aws_region
 }
 
-output "username" {
-  value = join("", aws_db_instance.test.*.username)
+output "backup_profile" {
+  value = var.backup_profile
 }
 
-output "password" {
-  value = random_string.password.result
+output "restore_profile" {
+  value = var.restore_profile
 }
 
-output "database_name" {
-  value = join("", aws_db_instance.test.*.name)
+output "state_machine_arn" {
+  value = aws_sfn_state_machine.state_machine.arn
 }

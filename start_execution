@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+tf_output=$(./terraform output -json)
+
+export aws_region
+aws_region=$(echo "${tf_output}" | jq -r '.aws_region.value')
+export backup_profile
+backup_profile=$(echo "${tf_output}" | jq -r '.backup_profile.value')
+export state_machine_arn
+state_machine_arn=$(echo "${tf_output}" | jq -r '.state_machine_arn.value')
+
+start_execution() {
+  aws stepfunctions start-execution \
+    --state-machine-arn "${state_machine_arn}" \
+    --profile "${backup_profile}" \
+    --region "${aws_region}" \
+    | jq -r '.executionArn'
+}
+
+get_state_entered() {
+  aws stepfunctions get-execution-history \
+    --execution-arn "${execution_arn}" \
+    --reverse-order \
+    --max-items 1 \
+    --profile "${backup_profile}" \
+    --region "${aws_region}" \
+    | jq -r '.events[] | .stateEnteredEventDetails? | .name'
+}
+
+get_stop_date() {
+  aws stepfunctions describe-execution \
+    --execution-arn "${execution_arn}" \
+    --profile "${backup_profile}" \
+    --region "${aws_region}" \
+    | jq -r '.stopDate'
+}
+
+get_execution_failed_cause() {
+  aws stepfunctions get-execution-history \
+    --execution-arn "${execution_arn}" \
+    --reverse-order \
+    --max-items 1 \
+    --profile "${backup_profile}" \
+    --region "${aws_region}" \
+    | jq -r '.events[] | .executionFailedEventDetails? | .cause'
+}
+
+execution_arn=$(start_execution)
+echo "Starting ${execution_arn}"
+
+while true; do
+  state_entered=$(get_state_entered)
+  stop_date=$(get_stop_date)
+
+  if [[ -n "${state_entered}" ]] && [[ "${state_entered}" != "null" ]] ; then
+    printf "\n%s\n" "${state_entered}"
+  fi
+  if [[ -n "${stop_date}" ]] && [[ "${stop_date}" != "null" ]] ; then
+    get_execution_failed_cause
+    break
+  fi
+
+  sleep 60
+done

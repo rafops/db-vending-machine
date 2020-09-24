@@ -49,20 +49,10 @@ If you want to connect to the database, make sure to open default security group
 
 ## Execute
 
-To execute the state machine, create a new execution with the following input:
-
-```json
-{
-    "db_instance_identifier": "db-vending-test"
-}
-```
-
-## Teardown
-
-To cleanup, run:
+To execute the state machine, run the following command:
 
 ```
-./teardown
+./start_execution
 ```
 
 ## Test Lambdas
@@ -71,4 +61,12 @@ To test Lambda functions locally, run Lambci script passing the function name an
 
 ```
 ./test_lambda create_snapshot '{"db_instance_identifier":"db-vending-test"}'
+```
+
+## Teardown
+
+To cleanup, run:
+
+```
+./teardown
 ```
