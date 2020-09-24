@@ -4,10 +4,10 @@ bundle() {
   docker run --rm \
     -v "$(pwd):/var/layer" \
     -w /var/layer \
-    lambci/lambda:build-ruby2.7 bundle $@
+    lambci/lambda:build-ruby2.7 bundle "$@"
 }
 
-cd lambda
+cd lambda || exit 1
 mkdir -p vendor/bundle
 bundle config set path 'vendor/bundle'
 bundle install
