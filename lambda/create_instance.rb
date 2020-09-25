@@ -18,6 +18,7 @@ def handler(event:, context:)
   db_snapshot_identifier = event["db_snapshot_identifier"]
   service_namespace = ENV["service_namespace"]
   security_group_id = ENV["security_group_id"]
+  restore_role_arn = ENV["restore_role_arn"]
   restore_db_instance_identifier = db_snapshot_identifier.sub(/-copied$/, "")
 
   logger = Logger.new($stdout)
@@ -35,7 +36,7 @@ def handler(event:, context:)
 
   role_credentials = Aws::AssumeRoleCredentials.new(
     client: Aws::STS::Client.new,
-    role_arn: event["restore_role_arn"],
+    role_arn: restore_role_arn,
     role_session_name: "CreateInstanceSession"
   )
   client = Aws::RDS::Client.new({

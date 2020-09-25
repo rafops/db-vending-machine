@@ -190,7 +190,8 @@ resource "aws_lambda_function" "create_instance" {
   environment {
     variables = {
       service_namespace = "${var.service_namespace}",
-      security_group_id = "${aws_security_group.restore.id}"
+      security_group_id = "${aws_security_group.restore.id}",
+      restore_role_arn = "${aws_iam_role.restore.arn}"
     }
   }
 
