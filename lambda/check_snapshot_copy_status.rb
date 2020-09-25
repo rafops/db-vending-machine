@@ -4,27 +4,22 @@ require 'aws-sdk-rds'
 
 
 def handler(event:, context:)
-  [
-    "db_snapshot_identifier",
-    "restore_role_arn"
-  ].each do |k|
-    unless event.has_key? k
-      raise "Event key #{k} not specified"
-    end  
+  unless event.has_key? "db_snapshot_identifier"
+    raise "Event key db_snapshot_identifier not specified"
   end
+
+  db_snapshot_identifier = event["db_snapshot_identifier"]
+  restore_role_arn = ENV["restore_role_arn"]
 
   logger = Logger.new($stdout)
   role_credentials = Aws::AssumeRoleCredentials.new(
     client: Aws::STS::Client.new,
-    role_arn: event["restore_role_arn"],
+    role_arn: restore_role_arn,
     role_session_name: "CheckSnapshotCopySession"
   )
   client = Aws::RDS::Client.new({
     credentials: role_credentials
   })
-
-  db_snapshot_identifier = event["db_snapshot_identifier"]
-  db_snapshot = nil
 
   logger.info("Checking snapshot #{db_snapshot_identifier}")
 

@@ -13,7 +13,6 @@ variable "backup_profile" {
 variable "backup_db_instance" {
   description = "The DB instance identifier where snapshots will be taken from. Usually a prodiction instance."
   type        = string
-  default     = "db-vending-test"
 }
 
 variable "restore_profile" {

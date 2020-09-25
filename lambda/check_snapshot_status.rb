@@ -8,11 +8,10 @@ def handler(event:, context:)
     raise "Event key db_snapshot_identifier not specified"
   end
 
+  db_snapshot_identifier = event["db_snapshot_identifier"]
+
   logger = Logger.new($stdout)
   client = Aws::RDS::Client.new
-
-  db_snapshot_identifier = event["db_snapshot_identifier"]
-  db_snapshot = nil
 
   logger.info("Checking snapshot #{db_snapshot_identifier}")
 

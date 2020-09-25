@@ -7,7 +7,7 @@ data "archive_file" "lambda" {
 ## Create snapshot
 
 resource "aws_lambda_function" "create_snapshot" {
-  description      = "Create a DB snapshot from DB instance"
+  description      = "Create a snapshot from a DB instance"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_CreateSnapshot"
   role             = aws_iam_role.lambda.arn
@@ -15,6 +15,12 @@ resource "aws_lambda_function" "create_snapshot" {
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
   timeout          = 60
+
+  environment {
+    variables = {
+      service_namespace = "${var.service_namespace}"
+    }
+  }
 
   depends_on = [
     data.archive_file.lambda,
@@ -30,7 +36,7 @@ resource "aws_cloudwatch_log_group" "create_snapshot_logs" {
 ## Check snapshot
 
 resource "aws_lambda_function" "check_snapshot_status" {
-  description      = "Check status for DB snapshot"
+  description      = "Check status of a snapshot"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_CheckSnapshotStatus"
   role             = aws_iam_role.lambda.arn
@@ -53,7 +59,7 @@ resource "aws_cloudwatch_log_group" "check_snapshot_status_logs" {
 ## Re-key snapshot
 
 resource "aws_lambda_function" "rekey_snapshot" {
-  description      = "Re-key DB snapshot with vending accessible CMK"
+  description      = "Re-key a snapshot with vending managed CMK"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_RekeySnapshot"
   role             = aws_iam_role.lambda.arn
@@ -61,6 +67,12 @@ resource "aws_lambda_function" "rekey_snapshot" {
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
   timeout          = 60
+
+  environment {
+    variables = {
+      kms_key_id = "${aws_kms_key.restore.arn}"
+    }
+  }
 
   depends_on = [
     data.archive_file.lambda,
@@ -76,7 +88,7 @@ resource "aws_cloudwatch_log_group" "rekey_snapshot_logs" {
 ## Share snapshot
 
 resource "aws_lambda_function" "share_snapshot" {
-  description      = "Share DB snapshot with vending account"
+  description      = "Share a snapshot with the restore account"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_ShareSnapshot"
   role             = aws_iam_role.lambda.arn
@@ -84,6 +96,12 @@ resource "aws_lambda_function" "share_snapshot" {
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
   timeout          = 60
+
+  environment {
+    variables = {
+      restore_account_id = "${local.restore_account_id}"
+    }
+  }
 
   depends_on = [
     data.archive_file.lambda,
@@ -99,7 +117,7 @@ resource "aws_cloudwatch_log_group" "share_snapshot_logs" {
 ## Copy snapshot
 
 resource "aws_lambda_function" "copy_snapshot" {
-  description      = "Copy DB snapshot between accounts"
+  description      = "Copy a snapshot from the backup to the restore account"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_CopySnapshot"
   role             = aws_iam_role.lambda.arn
@@ -107,6 +125,15 @@ resource "aws_lambda_function" "copy_snapshot" {
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
   timeout          = 60
+
+  environment {
+    variables = {
+      service_namespace = "${var.service_namespace}",
+      kms_key_id = "${aws_kms_key.restore.arn}",
+      backup_account_id = "${local.backup_account_id}",
+      restore_role_arn = "${aws_iam_role.restore.arn}"
+    }
+  }
 
   depends_on = [
     data.archive_file.lambda,
@@ -122,7 +149,7 @@ resource "aws_cloudwatch_log_group" "copy_snapshot_logs" {
 ## Check snapshot copy
 
 resource "aws_lambda_function" "check_snapshot_copy_status" {
-  description      = "Check copy status for DB snapshot"
+  description      = "Check the copy status of a snapshot"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_CheckSnapshotCopyStatus"
   role             = aws_iam_role.lambda.arn
@@ -130,6 +157,12 @@ resource "aws_lambda_function" "check_snapshot_copy_status" {
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
   timeout          = 60
+
+  environment {
+    variables = {
+      restore_role_arn = "${aws_iam_role.restore.arn}"
+    }
+  }
 
   depends_on = [
     data.archive_file.lambda,
@@ -145,7 +178,7 @@ resource "aws_cloudwatch_log_group" "check_snapshot_copy_status_logs" {
 ## Create instance
 
 resource "aws_lambda_function" "create_instance" {
-  description      = "Create DB instance from snapshot"
+  description      = "Restore a DB instance from a snapshot"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_CreateInstance"
   role             = aws_iam_role.lambda.arn
@@ -153,6 +186,13 @@ resource "aws_lambda_function" "create_instance" {
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
   timeout          = 60
+
+  environment {
+    variables = {
+      service_namespace = "${var.service_namespace}",
+      security_group_id = "${aws_security_group.restore.id}"
+    }
+  }
 
   depends_on = [
     data.archive_file.lambda,
@@ -168,7 +208,7 @@ resource "aws_cloudwatch_log_group" "create_instance_logs" {
 ## Check instance status
 
 resource "aws_lambda_function" "check_instance_status" {
-  description      = "Check DB instance status"
+  description      = "Check restored DB instance status"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_CheckInstanceStatus"
   role             = aws_iam_role.lambda.arn
@@ -176,6 +216,12 @@ resource "aws_lambda_function" "check_instance_status" {
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
   timeout          = 60
+
+  environment {
+    variables = {
+      restore_role_arn = "${aws_iam_role.restore.arn}"
+    }
+  }
 
   depends_on = [
     data.archive_file.lambda,
@@ -213,7 +259,6 @@ EOF
   }
 }
 
-# TODO: Restrict resources
 resource "aws_iam_policy" "lambda" {
   name     = "DBVending-${var.service_namespace}-Lambda"
   description = "IAM policy for Lambdas"
@@ -225,13 +270,13 @@ resource "aws_iam_policy" "lambda" {
     {
       "Effect": "Allow",
       "Action": [
-        "rds:DescribeDBInstances",
         "rds:CreateDBSnapshot",
         "rds:CopyDBSnapshot",
         "rds:AddTagsToResource",
         "rds:DescribeDBSnapshots",
         "rds:ModifyDBSnapshotAttribute",
-        "rds:DeleteDBSnapshot"
+        "rds:DeleteDBSnapshot",
+        "rds:DescribeDBInstances"
       ],
       "Resource": "*"
     },

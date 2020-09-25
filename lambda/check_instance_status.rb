@@ -4,27 +4,23 @@ require 'aws-sdk-rds'
 
 
 def handler(event:, context:)
-  [
-    "db_instance_identifier",
-    "restore_role_arn"
-  ].each do |k|
-    unless event.has_key? k
-      raise "Event key #{k} not specified"
-    end  
+  unless event.has_key? "db_instance_identifier"
+    raise "Event key db_instance_identifier not specified"
   end
 
   db_instance_identifier = event["db_instance_identifier"]
+  restore_role_arn = ENV["restore_role_arn"]
 
   logger = Logger.new($stdout)
   role_credentials = Aws::AssumeRoleCredentials.new(
     client: Aws::STS::Client.new,
-    role_arn: event["restore_role_arn"],
+    role_arn: restore_role_arn,
     role_session_name: "CheckInstanceStatusSession"
   )
   client = Aws::RDS::Client.new({
     credentials: role_credentials
   })
-  
+
   logger.info("Checking DB instance #{db_instance_identifier}")
 
   response = client.describe_db_instances({

@@ -46,7 +46,7 @@ get_execution_failed_cause() {
 }
 
 execution_arn=$(start_execution)
-echo "Starting ${execution_arn}"
+echo "Starting ${execution_arn}..."
 
 while true; do
   state_entered=$(get_state_entered)
@@ -62,5 +62,9 @@ while true; do
   sleep 60
 done
 
-get_execution_failed_cause
+failed_cause=$(get_execution_failed_cause)
+if [[ -n "${failed_cause}" ]] && [[ "${failed_cause}" != "null" ]] ; then
+  echo "${failed_cause}"
+fi
+
 echo "Done!"

@@ -4,20 +4,15 @@ require 'aws-sdk-rds'
 
 
 def handler(event:, context:)
-  [
-    "db_snapshot_identifier",
-    "restore_account_id"
-  ].each do |k|
-    unless event.has_key? k
-      raise "Event key #{k} not specified"
-    end  
+  unless event.has_key? "db_snapshot_identifier"
+    raise "Event key db_snapshot_identifier not specified"
   end
+
+  db_snapshot_identifier = event["db_snapshot_identifier"]
+  restore_account_id = ENV["restore_account_id"]
 
   logger = Logger.new($stdout)
   client = Aws::RDS::Client.new
-
-  db_snapshot_identifier = event["db_snapshot_identifier"]
-  restore_account_id = event["restore_account_id"]
 
   logger.info("Sharing snapshot #{db_snapshot_identifier}")
 
@@ -29,11 +24,13 @@ def handler(event:, context:)
     ], 
   })
 
-  result = response.to_h[:db_snapshot_attributes_result]
-  unless result.is_a? Hash and result.has_key? :db_snapshot_identifier
+  db_snapshot = response.to_h[:db_snapshot_attributes_result]
+  unless db_snapshot.is_a? Hash and db_snapshot.has_key? :db_snapshot_identifier
     logger.debug("Response: #{response.inspect}")
     raise "Invalid response when calling #modify_db_snapshot_attribute, key :db_snapshot_identifier not found"
   end
 
-  result
+  {
+    "db_snapshot_identifier": db_snapshot[:db_snapshot_identifier]
+  }
 end

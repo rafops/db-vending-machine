@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+./terraform init
+./terraform apply -var-file="test.tfvars" --auto-approve

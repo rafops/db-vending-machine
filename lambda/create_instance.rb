@@ -7,29 +7,27 @@ require 'pp'
 def handler(event:, context:)
   [
     "db_instance_identifier",
-    "db_snapshot_identifier",
-    "restore_role_arn",
-    "security_group_id"
+    "db_snapshot_identifier"
   ].each do |k|
     unless event.has_key? k
       raise "Event key #{k} not specified"
-    end  
+    end
   end
+
+  db_instance_identifier = event["db_instance_identifier"]
+  db_snapshot_identifier = event["db_snapshot_identifier"]
+  service_namespace = ENV["service_namespace"]
+  security_group_id = ENV["security_group_id"]
+  restore_db_instance_identifier = db_snapshot_identifier.sub(/-copied$/, "")
 
   logger = Logger.new($stdout)
   client = Aws::RDS::Client.new
 
-  db_instance_identifier = event["db_instance_identifier"]
-  db_snapshot_identifier = event["db_snapshot_identifier"]
-  security_group_id = event["security_group_id"]
-  service_namespace = event.has_key?("service_namespace") ? event["service_namespace"] : "Default"
-  restore_db_instance_identifier = db_snapshot_identifier.sub(/-copied$/, "")
-
   response = client.describe_db_instances({
     db_instance_identifier: db_instance_identifier
   })
-  db_instance = response.to_h[:db_instances].to_a.first
 
+  db_instance = response.to_h[:db_instances].to_a.first
   unless db_instance.is_a? Hash
     logger.debug("Response: #{response.inspect}")
     raise "Invalid response when calling #describe_db_instances, instance #{db_instance_identifier} not found"

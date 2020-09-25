@@ -13,7 +13,6 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Resource": "${aws_lambda_function.create_snapshot.arn}",
       "Parameters": {
         "db_instance_identifier": "${var.backup_db_instance}",
-        "service_namespace": "${var.service_namespace}",
         "execution_id.$": "$$.Execution.Id"
       },
       "Next": "CheckSnapshotCreationStatus"
@@ -51,10 +50,6 @@ resource "aws_sfn_state_machine" "state_machine" {
     "RekeySnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.rekey_snapshot.arn}",
-      "Parameters": {
-        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
-        "kms_key_id": "${aws_kms_key.restore.arn}"
-      },
       "Next": "CheckSnapshotRekeyStatus",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
@@ -95,10 +90,6 @@ resource "aws_sfn_state_machine" "state_machine" {
     "ShareSnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.share_snapshot.arn}",
-      "Parameters": {
-        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
-        "restore_account_id": "${local.restore_account_id}"
-      },
       "Next": "CopySnapshot",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
@@ -111,14 +102,6 @@ resource "aws_sfn_state_machine" "state_machine" {
     "CopySnapshot": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.copy_snapshot.arn}",
-      "Parameters": {
-        "db_snapshot_account_id": "${local.backup_account_id}",
-        "db_snapshot_region": "${var.aws_region}",
-        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
-        "restore_role_arn": "${aws_iam_role.restore.arn}",
-        "kms_key_id": "${aws_kms_key.restore.arn}",
-        "service_namespace": "${var.service_namespace}"
-      },
       "Next": "CheckSnapshotCopyStatus",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
@@ -129,10 +112,6 @@ resource "aws_sfn_state_machine" "state_machine" {
     "CheckSnapshotCopyStatus": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.check_snapshot_copy_status.arn}",
-      "Parameters": {
-        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
-        "restore_role_arn": "${aws_iam_role.restore.arn}"
-      },
       "Next": "IsSnapshotCopied",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],
@@ -165,10 +144,7 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Resource": "${aws_lambda_function.create_instance.arn}",
       "Parameters": {
         "db_instance_identifier": "${var.backup_db_instance}",
-        "db_snapshot_identifier.$": "$.db_snapshot_identifier",
-        "restore_role_arn": "${aws_iam_role.restore.arn}",
-        "security_group_id": "${aws_security_group.restore.id}",
-        "service_namespace": "${var.service_namespace}"
+        "db_snapshot_identifier.$": "$.db_snapshot_identifier"
       },
       "Next": "CheckInstanceStatus",
       "Retry": [ {
@@ -180,10 +156,6 @@ resource "aws_sfn_state_machine" "state_machine" {
     "CheckInstanceStatus": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.check_instance_status.arn}",
-      "Parameters": {
-        "db_instance_identifier.$": "$.db_instance_identifier",
-        "restore_role_arn": "${aws_iam_role.restore.arn}"
-      },
       "Next": "IsInstanceRestored",
       "Retry": [ {
         "ErrorEquals": [ "States.ALL" ],

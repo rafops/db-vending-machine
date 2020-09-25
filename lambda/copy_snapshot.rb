@@ -4,42 +4,37 @@ require 'aws-sdk-rds'
 
 
 def handler(event:, context:)
-  [
-    "db_snapshot_identifier",
-    "db_snapshot_account_id",
-    "db_snapshot_region",
-    "restore_role_arn",
-    "kms_key_id"
-  ].each do |k|
-    unless event.has_key? k
-      raise "Event key #{k} not specified"
-    end  
+  unless event.has_key? "db_snapshot_identifier"
+    raise "Event key db_snapshot_identifier not specified"
   end
+
+  db_snapshot_identifier = event["db_snapshot_identifier"]
+  service_namespace = ENV["service_namespace"]
+  aws_region = ENV["AWS_REGION"]
+  backup_account_id = ENV["backup_account_id"]
+  kms_key_id = ENV["kms_key_id"]
+  restore_role_arn = ENV["restore_role_arn"]
 
   logger = Logger.new($stdout)
   client = Aws::STS::Client.new
 
   source_db_snapshot_identifier = [
     "arn:aws:rds",
-    event["db_snapshot_region"],
-    event["db_snapshot_account_id"],
+    aws_region,
+    backup_account_id,
     "snapshot",
-    event["db_snapshot_identifier"]
+    db_snapshot_identifier
   ].join(":")
-  target_db_snapshot_identifier = event["db_snapshot_identifier"].sub(/rekeyed$/, "copied")
-  kms_key_id = event["kms_key_id"]
-  service_namespace = event.has_key?("service_namespace") ? event["service_namespace"] : "Default"
+  target_db_snapshot_identifier = db_snapshot_identifier.sub(/rekeyed$/, "copied")
   
   role_credentials = Aws::AssumeRoleCredentials.new(
     client: Aws::STS::Client.new,
-    role_arn: event["restore_role_arn"],
+    role_arn: restore_role_arn,
     role_session_name: "CopySnapshotSession"
   )
   client = Aws::RDS::Client.new({
     credentials: role_credentials
   })
-
-  db_snapshot = nil
 
   logger.info("Copying snapshot #{source_db_snapshot_identifier}")
 

@@ -4,22 +4,16 @@ require 'aws-sdk-rds'
 
 
 def handler(event:, context:)
-  [
-    "db_snapshot_identifier",
-    "kms_key_id"
-  ].each do |k|
-    unless event.has_key? k
-      raise "Event key #{k} not specified"
-    end  
+  unless event.has_key? "db_snapshot_identifier"
+    raise "Event key db_snapshot_identifier not specified"
   end
+
+  source_db_snapshot_identifier = event["db_snapshot_identifier"]
+  target_db_snapshot_identifier = "#{source_db_snapshot_identifier}-rekeyed"
+  kms_key_id = ENV["kms_key_id"]
 
   logger = Logger.new($stdout)
   client = Aws::RDS::Client.new
-
-  source_db_snapshot_identifier = event["db_snapshot_identifier"]
-  kms_key_id = event["kms_key_id"]
-  target_db_snapshot_identifier = "#{source_db_snapshot_identifier}-rekeyed"
-  db_snapshot = nil
 
   logger.info("Re-keying snapshot #{source_db_snapshot_identifier}")
 

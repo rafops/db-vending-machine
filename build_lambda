@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
 
-bundle() {
-  docker run --rm \
-    -v "$(pwd):/var/layer" \
-    -w /var/layer \
-    lambci/lambda:build-ruby2.7 bundle "$@"
-}
-
 cd lambda || exit 1
-mkdir -p vendor/bundle
-bundle config set path 'vendor/bundle'
-bundle install
-rm -rf vendor/bundle/ruby/2.7.0/cache
+rm -f ../lambda.zip
 zip -r ../lambda.zip .

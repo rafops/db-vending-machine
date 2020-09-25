@@ -22,7 +22,6 @@ EOF
   }
 }
 
-# TODO: Restrict resources
 resource "aws_iam_policy" "restore" {
   provider    = aws.restore
   name        = "DBVending-${var.service_namespace}-Restore"
@@ -35,11 +34,11 @@ resource "aws_iam_policy" "restore" {
     {
       "Effect": "Allow",
       "Action": [
-        "rds:DescribeDBInstances",
         "rds:DescribeDBSnapshots",
-        "rds:RestoreDBInstanceFromDBSnapshot",
         "rds:CopyDBSnapshot",
         "rds:DeleteDBSnapshot",
+        "rds:DescribeDBInstances",
+        "rds:RestoreDBInstanceFromDBSnapshot",
         "rds:DeleteDBInstance",
         "rds:AddTagsToResource"
       ],

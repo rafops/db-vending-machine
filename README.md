@@ -4,7 +4,7 @@ A Terraform plugin that creates a DB Vending Machine that creates copies of prod
 
 ## Configuration
 
-Set the following Terraform variables to configure DB Vending Machine module:
+Set the following Terraform variables to configure DB Vending Machine as a module or using `terraform.tfvars`:
 
 - Set `backup_profile` to AWS credentials profile where snapshots will be taken from. Usually a production account.
 - Set `backup_db_instance` to DB instance identifier in the `backup_profile` account where snapshots will be taken from. Usually a production instance.
@@ -22,7 +22,7 @@ This Terraform module has a Dockerfile that creates a container with Terraform a
 
 ## Build Lambda
 
-This Terraform module Lambda functions depends on external dependencies. To download and vendorize these dependencies, run the following command:
+To generate a lambda.zip package for deployment, run the following command:
 
 ```
 ./build_lambda
@@ -38,21 +38,20 @@ Deploy service infrastructure:
 
 ## Deploy test DB
 
-To deploy a test db development/test purposes:
+To deploy a test DB instance for development/test purposes:
 
 ```
-echo "create_test_db = true" > terraform.tfvars
-./deploy
+./deploy_test
 ```
 
 If you want to connect to the database, make sure to open default security group inbound rules to accept connections.
 
-## Execute
+## Restore
 
-To execute the state machine, run the following command:
+To restore a DB instance, run the following command:
 
 ```
-./start_execution
+./restore
 ```
 
 ## Test Lambdas
@@ -65,7 +64,7 @@ To test Lambda functions locally, run Lambci script passing the function name an
 
 ## Teardown
 
-To cleanup, run:
+To teardown infrastructure, run:
 
 ```
 ./teardown

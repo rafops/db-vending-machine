@@ -11,8 +11,8 @@ def handler(event:, context:)
   logger = Logger.new($stdout)
   client = Aws::RDS::Client.new
 
-  service_namespace = event.has_key?("service_namespace") ? event["service_namespace"] : "Default"
   db_instance_identifier = event["db_instance_identifier"]
+  service_namespace = ENV["service_namespace"]
   # Generate a unique ID based on the first token of execution id UUID
   # Format: arn:aws:states:region:account_id:execution:state_machine_name:UUID
   unique_id = event["execution_id"].to_s.split(":").last.to_s.split("-").first
@@ -28,7 +28,7 @@ def handler(event:, context:)
     Time.now.to_i,
     unique_id
   ].compact.join("-").downcase
-  
+
   logger.info("Creating snapshot #{db_snapshot_identifier} from instance #{db_instance_identifier}")
 
   response = client.create_db_snapshot({
