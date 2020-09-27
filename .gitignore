@@ -5,3 +5,4 @@
 lambda/vendor
 lambda.zip
 terraform.tfvars
+.psql_history

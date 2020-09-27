@@ -46,6 +46,12 @@ To deploy a test DB instance for development/test purposes:
 
 If you want to connect to the database, make sure to open default security group inbound rules to accept connections.
 
+To create a user `test_iam` with IAM authentication enabled, run the following command:
+
+```
+./test_psql -f test_user.sql
+```
+
 ## Restore
 
 To restore a DB instance, run the following command:

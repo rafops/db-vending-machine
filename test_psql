@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export PATH="${DIR}:${PATH}"
+
+if [[ -z "$(command -v jq)" ]] ; then
+  echo "jq not found"
+  exit 1
+fi
+
+test_db=$(terraform show -json | jq -r '.values.root_module.resources[] | select(.address=="aws_db_instance.test[0]") | .values')
+
+export PGPASSWORD
+PGPASSWORD=$(echo "${test_db}" | jq -r '.password')
+
+host=$(echo "${test_db}" | jq -r '.address')
+user=$(echo "${test_db}" | jq -r '.username')
+dbname=$(echo "${test_db}" | jq -r '.name')
+
+psql "host=${host} port=5432 sslmode=require dbname=${dbname} user=${user} password=$PGPASSWORD" "$@"
