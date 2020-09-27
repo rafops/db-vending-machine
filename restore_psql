@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export PATH="${DIR}:${PATH}"
+
+if [[ -z "$(command -v jq)" ]] ; then
+  echo "jq not found"
+  exit 1
+fi
+
+host="${1}"
+user="${2}"
+dbname="${3}"
+shift
+shift
+shift
+
+if [[ -z "${host}" ]] || [[ -z "${user}" ]] || [[ -z "${dbname}" ]] ; then
+  echo "Usage: ${0} host user dbname"
+  exit 1
+fi
+
+tf_output=$(terraform output -json)
+
+export AWS_REGION
+AWS_REGION=$(echo "${tf_output}" | jq -r '.aws_region.value')
+export AWS_PROFILE
+AWS_PROFILE=$(echo "${tf_output}" | jq -r '.restore_profile.value')
+
+export PGPASSWORD
+PGPASSWORD=$(aws rds generate-db-auth-token --hostname "${host}" --port 5432 --username "${user}")
+
+psql "host=${host} port=5432 sslmode=verify-full sslrootcert=rds-combined-ca-bundle.pem dbname=${dbname} user=${user} password=${PGPASSWORD}" "$@"

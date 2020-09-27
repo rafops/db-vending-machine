@@ -17,4 +17,4 @@ host=$(echo "${test_db}" | jq -r '.address')
 user=$(echo "${test_db}" | jq -r '.username')
 dbname=$(echo "${test_db}" | jq -r '.name')
 
-psql "host=${host} port=5432 sslmode=require dbname=${dbname} user=${user} password=$PGPASSWORD" "$@"
+psql "host=${host} port=5432 sslmode=require dbname=${dbname} user=${user} password=${PGPASSWORD}" "$@"

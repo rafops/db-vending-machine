@@ -60,6 +60,12 @@ To restore a DB instance, run the following command:
 ./restore
 ```
 
+If you restored a test DB instance, run the following command to connect to it:
+
+```
+./restore_psql <host of restored DB instance> db_vending_test test
+```
+
 ## Test Lambdas
 
 To test Lambda functions locally, run Lambci script passing the function name and the payload as follows:

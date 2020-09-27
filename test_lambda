@@ -1,18 +1,34 @@
 #!/usr/bin/env bash
 
-export AWS_PROFILE
-AWS_PROFILE="db-vending-backup"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export PATH="${DIR}:${PATH}"
+
+if [[ -z "$(command -v jq)" ]] ; then
+  echo "jq not found"
+  exit 1
+fi
+
+lambda_function="${1}"
+payload="${2}"
+
+if [[ -z "${lambda_function}" ]] || [[ -z "${payload}" ]] ; then
+  echo "Usage: ${0} lambda_function payload"
+  exit 1
+fi
+
+tf_output=$(terraform output -json)
+
 export AWS_REGION
-AWS_REGION="us-east-1"
+AWS_REGION=$(echo "${tf_output}" | jq -r '.aws_region.value')
+export AWS_PROFILE
+AWS_PROFILE=$(echo "${tf_output}" | jq -r '.backup_profile.value')
+
 export AWS_ACCESS_KEY_ID
 AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile "${AWS_PROFILE}")
 export AWS_SECRET_ACCESS_KEY
 AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key --profile "${AWS_PROFILE}")
 export AWS_SESSION_TOKEN
 AWS_SESSION_TOKEN=$(aws configure get aws_session_token --profile "${AWS_PROFILE}")
-
-lambda_function="${1}"
-payload="${2}"
 
 docker run -it --rm \
   -v "$(pwd)/lambda:/var/task:ro,delegated" \
