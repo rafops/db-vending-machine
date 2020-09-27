@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
-./terraform init
-./terraform destroy --auto-approve
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PATH="${DIR}:${PATH}"
+
+terraform init && terraform destroy --auto-approve

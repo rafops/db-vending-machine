@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
-
 export AWS_PROFILE
 AWS_PROFILE="db-vending-backup"
 export AWS_REGION
