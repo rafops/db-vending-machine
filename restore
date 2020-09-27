@@ -59,6 +59,13 @@ get_succeeded_event() {
     | jq -r '.events[] | .executionSucceededEventDetails? | .output'
 }
 
+get_endpoint_address() {
+  local db_instance_identifier="${1}"
+  aws rds describe-db-instances \
+    --db-instance-identifier "${db_instance_identifier}" \
+    | jq -r '.DBInstances | first | .Endpoint.Address'
+}
+
 execution_arn=$(start_execution "${state_machine_arn}")
 echo "Starting: ${execution_arn} ..."
 
@@ -84,7 +91,8 @@ fi
 succeeded_event=$(get_succeeded_event "${execution_arn}")
 if [[ -n "${succeeded_event}" ]] && [[ "${succeeded_event}" != "null" ]] ; then
   db_instance_identifier="$(echo "${succeeded_event}" | jq -r '.db_instance_identifier')"
-  echo "DB Instance: ${db_instance_identifier}"
+  endpoint="$(get_endpoint_address "${db_instance_identifier}")"
+  echo "Endpoint: ${endpoint}"
 fi
 
 echo "Done!"
