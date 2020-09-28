@@ -25,7 +25,7 @@ resource "aws_db_instance" "test" {
   backup_retention_period             = 0
   engine                              = "postgres"
   engine_version                      = "12.3"
-  identifier                          = var.backup_db_instance
+  identifier                          = var.source_db_instance
   instance_class                      = "db.m5.large"
   kms_key_id                          = element(aws_kms_key.test.*.arn, count.index)
   multi_az                            = false

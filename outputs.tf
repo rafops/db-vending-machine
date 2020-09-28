@@ -2,12 +2,20 @@ output "aws_region" {
   value = var.aws_region
 }
 
-output "backup_profile" {
-  value = var.backup_profile
+output "source_profile" {
+  value = var.source_profile
 }
 
-output "restore_profile" {
-  value = var.restore_profile
+output "destination_profile" {
+  value = var.destination_profile
+}
+
+output "destination_account_id" {
+  value = local.destination_account_id
+}
+
+output "service_namespace" {
+  value = var.service_namespace
 }
 
 output "state_machine_arn" {

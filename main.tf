@@ -5,14 +5,14 @@ terraform {
 provider "aws" {
   version = "~> 3.5.0"
   region  = var.aws_region
-  profile = var.backup_profile
+  profile = var.source_profile
 }
 
 provider "aws" {
   version = "~> 3.5.0"
   region  = var.aws_region
-  profile = var.restore_profile
-  alias   = "restore"
+  profile = var.destination_profile
+  alias   = "destination"
 }
 
 data "aws_caller_identity" "current" {}

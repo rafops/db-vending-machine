@@ -6,11 +6,11 @@ A Terraform plugin that creates a DB Vending Machine that creates copies of prod
 
 Set the following Terraform variables to configure DB Vending Machine as a module or using `terraform.tfvars`:
 
-- Set `backup_profile` to AWS credentials profile where snapshots will be taken from. Usually a production account.
-- Set `backup_db_instance` to DB instance identifier in the `backup_profile` account where snapshots will be taken from. Usually a production instance.
-- Set `restore_profile` to AWS credentials profile where DB instances will be restored into. Usually a development account.
-- Set `restore_vpc_id` to the VPC in the `restore_profile` account where DB instances will be restored into.
-- Set `restore_subnet_ids` to a list containing a minimum of two subnets from the `restore_vpc_id`.
+- Set `source_profile` to AWS credentials profile where snapshots will be taken from. Usually a production account.
+- Set `source_db_instance` to DB instance identifier in the `source_profile` account where snapshots will be taken from. Usually a production instance.
+- Set `destination_profile` to AWS credentials profile where DB instances will be restored into. Usually a development account.
+- Set `destination_vpc_id` to the VPC in the `destination_profile` account where DB instances will be restored into.
+- Set `destination_subnet_ids` to a list containing a minimum of two subnets from the `destination_vpc_id`.
 
 ## Build Terraform
 
@@ -46,12 +46,6 @@ To deploy a test DB instance for development/test purposes:
 
 If you want to connect to the database, make sure to open default security group inbound rules to accept connections.
 
-To create a user `test_iam` with IAM authentication enabled, run the following command:
-
-```
-./test_psql -f test_user.sql
-```
-
 ## Restore
 
 To restore a DB instance, run the following command:
@@ -63,7 +57,7 @@ To restore a DB instance, run the following command:
 If you restored a test DB instance, run the following command to connect to it:
 
 ```
-./restore_psql <host of restored DB instance> db_vending_test test
+./psql_restore <host of restored DB instance> db_vending test
 ```
 
 ## Test Lambdas

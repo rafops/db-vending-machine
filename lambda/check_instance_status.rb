@@ -9,12 +9,12 @@ def handler(event:, context:)
   end
 
   db_instance_identifier = event["db_instance_identifier"]
-  restore_role_arn = ENV["restore_role_arn"]
+  vending_role_arn = ENV["vending_role_arn"]
 
   logger = Logger.new($stdout)
   role_credentials = Aws::AssumeRoleCredentials.new(
     client: Aws::STS::Client.new,
-    role_arn: restore_role_arn,
+    role_arn: vending_role_arn,
     role_session_name: "CheckInstanceStatusSession"
   )
   client = Aws::RDS::Client.new({

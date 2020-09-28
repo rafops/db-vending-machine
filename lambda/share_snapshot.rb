@@ -9,7 +9,7 @@ def handler(event:, context:)
   end
 
   db_snapshot_identifier = event["db_snapshot_identifier"]
-  restore_account_id = ENV["restore_account_id"]
+  destination_account_id = ENV["destination_account_id"]
 
   logger = Logger.new($stdout)
   client = Aws::RDS::Client.new
@@ -20,7 +20,7 @@ def handler(event:, context:)
     attribute_name: "restore", 
     db_snapshot_identifier: db_snapshot_identifier,
     values_to_add: [
-      restore_account_id
+      destination_account_id
     ], 
   })
 

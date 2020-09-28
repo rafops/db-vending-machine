@@ -1,6 +1,6 @@
-resource "aws_iam_role" "restore" {
-  provider = aws.restore
-  name     = "DBVending-${var.service_namespace}-Restore"
+resource "aws_iam_role" "vending" {
+  provider = aws.destination
+  name     = "DBVending-${var.service_namespace}"
 
   assume_role_policy = <<EOF
 {
@@ -10,7 +10,7 @@ resource "aws_iam_role" "restore" {
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
       "Principal": {
-        "AWS": "arn:aws:iam::${local.backup_account_id}:root"
+        "AWS": "arn:aws:iam::${local.source_account_id}:root"
       }
     }
   ]
@@ -22,10 +22,10 @@ EOF
   }
 }
 
-resource "aws_iam_policy" "restore" {
-  provider    = aws.restore
-  name        = "DBVending-${var.service_namespace}-Restore"
-  description = "IAM policy for DB restore"
+resource "aws_iam_policy" "vending" {
+  provider    = aws.destination
+  name        = "DBVending-${var.service_namespace}"
+  description = "IAM policy for vending role"
 
   policy = <<EOF
 {
@@ -65,14 +65,14 @@ resource "aws_iam_policy" "restore" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "restore" {
-  provider   = aws.restore
-  role       = aws_iam_role.restore.id
-  policy_arn = aws_iam_policy.restore.arn
+resource "aws_iam_role_policy_attachment" "vending" {
+  provider   = aws.destination
+  role       = aws_iam_role.vending.id
+  policy_arn = aws_iam_policy.vending.arn
 }
 
-resource "aws_kms_key" "restore" {
-  description             = "DB Vending Machine ${var.service_namespace} restore key"
+resource "aws_kms_key" "vending" {
+  description             = "DB Vending Machine ${var.service_namespace} key"
   deletion_window_in_days = 7
 
   policy = <<EOF
@@ -80,19 +80,19 @@ resource "aws_kms_key" "restore" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "Allow backup account to use this CMK",
+      "Sid": "Allow source account to use this CMK",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::${local.backup_account_id}:root"
+        "AWS": "arn:aws:iam::${local.source_account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
     },
     {
-      "Sid": "Allow restore account to use this CMK",
+      "Sid": "Allow vending role to use this CMK",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "${aws_iam_role.restore.arn}"
+        "AWS": "${aws_iam_role.vending.arn}"
       },
       "Action": [
         "kms:Encrypt",
@@ -104,10 +104,10 @@ resource "aws_kms_key" "restore" {
       "Resource": "*"
     },
     {
-      "Sid": "Allow restore account to manage grants",
+      "Sid": "Allow vending role to manage grants",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "${aws_iam_role.restore.arn}"
+        "AWS": "${aws_iam_role.vending.arn}"
       },
       "Action": [
         "kms:CreateGrant",
@@ -130,22 +130,22 @@ EOF
   }
 }
 
-resource "aws_db_subnet_group" "restore" {
-  provider   = aws.restore
+resource "aws_db_subnet_group" "vending" {
+  provider   = aws.destination
   # only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in "name"
-  name       = lower("DBVending-${var.service_namespace}-Restore")
-  subnet_ids = var.restore_subnet_ids
+  name       = lower("DBVending-${var.service_namespace}")
+  subnet_ids = var.destination_subnet_ids
 
   tags = {
     service = "DBVending-${var.service_namespace}"
   }
 }
 
-resource "aws_security_group" "restore" {
-  provider    = aws.restore
-  name        = "DBVending-${var.service_namespace}-Restore"
+resource "aws_security_group" "vending" {
+  provider    = aws.destination
+  name        = "DBVending-${var.service_namespace}"
   description = "Allow inbound traffic to restored DB instances"
-  vpc_id      = var.restore_vpc_id
+  vpc_id      = var.destination_vpc_id
 
   ingress {
     description = "Allow connections to PostgreSQL"

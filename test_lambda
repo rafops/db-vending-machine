@@ -21,7 +21,7 @@ tf_output=$(terraform output -json)
 export AWS_REGION
 AWS_REGION=$(echo "${tf_output}" | jq -r '.aws_region.value')
 export AWS_PROFILE
-AWS_PROFILE=$(echo "${tf_output}" | jq -r '.backup_profile.value')
+AWS_PROFILE=$(echo "${tf_output}" | jq -r '.source_profile.value')
 
 export AWS_ACCESS_KEY_ID
 AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile "${AWS_PROFILE}")

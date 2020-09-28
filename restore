@@ -13,7 +13,7 @@ tf_output=$(terraform output -json)
 export AWS_REGION
 AWS_REGION=$(echo "${tf_output}" | jq -r '.aws_region.value')
 export AWS_PROFILE
-AWS_PROFILE=$(echo "${tf_output}" | jq -r '.backup_profile.value')
+AWS_PROFILE=$(echo "${tf_output}" | jq -r '.source_profile.value')
 
 state_machine_arn=$(echo "${tf_output}" | jq -r '.state_machine_arn.value')
 

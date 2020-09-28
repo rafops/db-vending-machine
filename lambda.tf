@@ -70,7 +70,7 @@ resource "aws_lambda_function" "rekey_snapshot" {
 
   environment {
     variables = {
-      kms_key_id = "${aws_kms_key.restore.arn}"
+      kms_key_id = "${aws_kms_key.vending.arn}"
     }
   }
 
@@ -99,7 +99,7 @@ resource "aws_lambda_function" "share_snapshot" {
 
   environment {
     variables = {
-      restore_account_id = "${local.restore_account_id}"
+      destination_account_id = "${local.destination_account_id}"
     }
   }
 
@@ -117,7 +117,7 @@ resource "aws_cloudwatch_log_group" "share_snapshot_logs" {
 ## Copy snapshot
 
 resource "aws_lambda_function" "copy_snapshot" {
-  description      = "Copy a snapshot from the backup to the restore account"
+  description      = "Copy a snapshot from the source to the destination account"
   filename         = "lambda.zip"
   function_name    = "DBVending_${var.service_namespace}_CopySnapshot"
   role             = aws_iam_role.lambda.arn
@@ -129,9 +129,9 @@ resource "aws_lambda_function" "copy_snapshot" {
   environment {
     variables = {
       service_namespace = "${var.service_namespace}",
-      kms_key_id = "${aws_kms_key.restore.arn}",
-      backup_account_id = "${local.backup_account_id}",
-      restore_role_arn = "${aws_iam_role.restore.arn}"
+      kms_key_id = "${aws_kms_key.vending.arn}",
+      source_account_id = "${local.source_account_id}",
+      vending_role_arn = "${aws_iam_role.vending.arn}"
     }
   }
 
@@ -160,7 +160,7 @@ resource "aws_lambda_function" "check_snapshot_copy_status" {
 
   environment {
     variables = {
-      restore_role_arn = "${aws_iam_role.restore.arn}"
+      vending_role_arn = "${aws_iam_role.vending.arn}"
     }
   }
 
@@ -175,14 +175,14 @@ resource "aws_cloudwatch_log_group" "check_snapshot_copy_status_logs" {
   retention_in_days = 14
 }
 
-## Create instance
+## Restore instance
 
-resource "aws_lambda_function" "create_instance" {
+resource "aws_lambda_function" "restore_instance" {
   description      = "Restore a DB instance from a snapshot"
   filename         = "lambda.zip"
-  function_name    = "DBVending_${var.service_namespace}_CreateInstance"
+  function_name    = "DBVending_${var.service_namespace}_RestoreInstance"
   role             = aws_iam_role.lambda.arn
-  handler          = "create_instance.handler"
+  handler          = "restore_instance.handler"
   source_code_hash = filebase64sha256("lambda.zip")
   runtime          = "ruby2.7"
   timeout          = 60
@@ -190,8 +190,8 @@ resource "aws_lambda_function" "create_instance" {
   environment {
     variables = {
       service_namespace = "${var.service_namespace}",
-      security_group_id = "${aws_security_group.restore.id}",
-      restore_role_arn = "${aws_iam_role.restore.arn}"
+      security_group_id = "${aws_security_group.vending.id}",
+      vending_role_arn = "${aws_iam_role.vending.arn}"
     }
   }
 
@@ -201,8 +201,8 @@ resource "aws_lambda_function" "create_instance" {
   ]
 }
 
-resource "aws_cloudwatch_log_group" "create_instance_logs" {
-  name              = "/aws/lambda/${aws_lambda_function.create_instance.function_name}"
+resource "aws_cloudwatch_log_group" "restore_instance_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.restore_instance.function_name}"
   retention_in_days = 14
 }
 
@@ -220,7 +220,7 @@ resource "aws_lambda_function" "check_instance_status" {
 
   environment {
     variables = {
-      restore_role_arn = "${aws_iam_role.restore.arn}"
+      vending_role_arn = "${aws_iam_role.vending.arn}"
     }
   }
 
@@ -300,14 +300,14 @@ resource "aws_iam_policy" "lambda" {
     {
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
-      "Resource": "${aws_iam_role.restore.arn}"
+      "Resource": "${aws_iam_role.vending.arn}"
     }
   ]
 }
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "backup" {
+resource "aws_iam_role_policy_attachment" "lambda" {
   role       = aws_iam_role.lambda.id
   policy_arn = aws_iam_policy.lambda.arn
 }

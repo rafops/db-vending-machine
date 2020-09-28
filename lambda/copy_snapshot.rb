@@ -11,9 +11,9 @@ def handler(event:, context:)
   db_snapshot_identifier = event["db_snapshot_identifier"]
   service_namespace = ENV["service_namespace"]
   aws_region = ENV["AWS_REGION"]
-  backup_account_id = ENV["backup_account_id"]
+  source_account_id = ENV["source_account_id"]
   kms_key_id = ENV["kms_key_id"]
-  restore_role_arn = ENV["restore_role_arn"]
+  vending_role_arn = ENV["vending_role_arn"]
 
   logger = Logger.new($stdout)
   client = Aws::STS::Client.new
@@ -21,7 +21,7 @@ def handler(event:, context:)
   source_db_snapshot_identifier = [
     "arn:aws:rds",
     aws_region,
-    backup_account_id,
+    source_account_id,
     "snapshot",
     db_snapshot_identifier
   ].join(":")
@@ -29,7 +29,7 @@ def handler(event:, context:)
   
   role_credentials = Aws::AssumeRoleCredentials.new(
     client: Aws::STS::Client.new,
-    role_arn: restore_role_arn,
+    role_arn: vending_role_arn,
     role_session_name: "CopySnapshotSession"
   )
   client = Aws::RDS::Client.new({

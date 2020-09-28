@@ -1,2 +1,2 @@
 create_test_db = true
-backup_db_instance = "db-vending-test"
+source_db_instance = "db-vending-test"

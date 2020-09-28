@@ -12,7 +12,7 @@ resource "aws_sfn_state_machine" "state_machine" {
       "Type": "Task",
       "Resource": "${aws_lambda_function.create_snapshot.arn}",
       "Parameters": {
-        "db_instance_identifier": "${var.backup_db_instance}",
+        "db_instance_identifier": "${var.source_db_instance}",
         "execution_id.$": "$$.Execution.Id"
       },
       "Next": "CheckSnapshotCreationStatus"
@@ -130,7 +130,7 @@ resource "aws_sfn_state_machine" "state_machine" {
           "Next": "WaitWhileSnapshotIsCopying"
         }
       ],
-      "Default": "CreateInstance"
+      "Default": "RestoreInstance"
     },
     "WaitWhileSnapshotIsCopying": {
       "Type": "Wait",
@@ -139,11 +139,11 @@ resource "aws_sfn_state_machine" "state_machine" {
     },
 
 
-    "CreateInstance": {
+    "RestoreInstance": {
       "Type": "Task",
-      "Resource": "${aws_lambda_function.create_instance.arn}",
+      "Resource": "${aws_lambda_function.restore_instance.arn}",
       "Parameters": {
-        "db_instance_identifier": "${var.backup_db_instance}",
+        "db_instance_identifier": "${var.source_db_instance}",
         "db_snapshot_identifier.$": "$.db_snapshot_identifier"
       },
       "Next": "CheckInstanceStatus",

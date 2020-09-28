@@ -4,29 +4,29 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "backup_profile" {
+variable "source_profile" {
   description = "The AWS profile for the AWS account where snapshots will be taken from. Usually a production account."
   type        = string
-  default     = "db-vending-backup"
+  default     = "db-vending-source"
 }
 
-variable "backup_db_instance" {
-  description = "The DB instance identifier where snapshots will be taken from. Usually a prodiction instance."
+variable "source_db_instance" {
+  description = "The DB instance identifier where snapshots will be taken from. Usually a production instance."
   type        = string
 }
 
-variable "restore_profile" {
+variable "destination_profile" {
   description = "The AWS profile for the AWS account where DB instances will be restored into."
   type        = string
-  default     = "db-vending-restore"
+  default     = "db-vending-destination"
 }
 
-variable "restore_vpc_id" {
+variable "destination_vpc_id" {
   description = "The VPC ID where DB instances will be restored into."
   type        = string
 }
 
-variable "restore_subnet_ids" {
+variable "destination_subnet_ids" {
   description = "A list of subnet IDs where DB instances will be restored into. At least two subnets on the same VPC."
   type        = list(string)
 }
@@ -38,7 +38,7 @@ variable "service_namespace" {
 }
 
 variable "create_test_db" {
-  description = "Creates a DB instance for testing/development purposes. To enable this option, set create_test_db = true in test.tfvars."
+  description = "Creates a DB instance for testing/development purposes."
   type        = bool
   default     = false
 }
